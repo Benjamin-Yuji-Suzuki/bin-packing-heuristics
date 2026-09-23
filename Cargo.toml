@@ -1,0 +1,17 @@
+[package]
+name = "bin-packing-heuristics"
+version = "0.1.0"
+edition = "2021"
+description = "Heurísticas clássicas (NF, FF, BF, FFD, BFD) para o Bin Packing unidimensional — projeto de Análise e Projeto de Algoritmos"
+license = "MIT"
+
+[lib]
+name = "bpp"
+path = "src/lib.rs"
+
+[dependencies]
+rand = "0.8"
+clap = { version = "4", features = ["derive"] }
+
+[profile.release]
+lto = true
