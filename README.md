@@ -104,6 +104,12 @@ a distinção O-grande × realidade do eixo E1.
 - Dósa 2007 / Dósa et al. 2013 — bound exato 11/9 + 6/9 do FFD
 - Martello & Toth 1990 — lower bound L2 (Discrete Applied Mathematics)
 - Falkenauer 1996 — distribuições de benchmark (Journal of Heuristics)
+- Coffman, So, Hofri & Yao 1980 — razão esperada exata 4/3 do NF em U(0,1]
+  (Information and Control) — **nosso NF médio 1.328 confirma com erro de 0.4%**
+- Bentley et al. 1984 (STOC) — FF assintoticamente ótimo na expectativa; FFD com
+  excesso esperado O(1) para itens ≤ 1/2 — **confirma nossas razões 1.001–1.02**
+- Bentley et al. 1983 (Allerton) — o estudo experimental que inspirou os teoremas
+  de 1984; precedente do desenho metodológico deste projeto
 
 ## Declaração de uso de IA
 
