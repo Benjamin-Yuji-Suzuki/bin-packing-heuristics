@@ -9,7 +9,7 @@ use std::time::Instant;
 #[derive(Debug, Clone)]
 pub struct RunResult {
     pub algorithm: &'static str,
-    pub distribution: &'static str,
+    pub distribution: String,
     pub n: usize,
     pub rep: usize,
     pub bins: usize,
@@ -57,7 +57,7 @@ pub fn run_experiment(sizes: &[usize], dists: &[Distribution], reps: usize) -> V
                     let elapsed = start.elapsed().as_micros();
                     results.push(RunResult {
                         algorithm: alg,
-                        distribution: dist.name(),
+                        distribution: dist.name().to_string(),
                         n,
                         rep,
                         bins: sol.bins,

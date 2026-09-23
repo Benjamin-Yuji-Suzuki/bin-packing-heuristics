@@ -44,6 +44,41 @@ scripts/            — geração de gráficos (matplotlib)
 resultados.csv      — 1.000 execuções do experimento completo
 ```
 
+## Comparação entre linguagens (Rust × C × C++ × Python)
+
+Para isolar o efeito da linguagem (constante multiplicativa do custo),
+as mesmas instâncias são exportadas em binário (f64 little-endian) e
+consumidas pelas 4 implementações — **mesmos itens, mesmos algoritmos,
+mesmo protocolo** (aquecimento + 1 medição por instância).
+
+```bash
+cargo run --release -- export --sizes 1000,2000,4000,8000,16000 --reps 10
+cargo run --release -- bench --dir instancias --out bench_rust.csv
+gcc -O2 -o bench/bench_c bench/bench.c -lm && ./bench/bench_c instancias bench_c.csv
+g++ -O2 -std=c++17 -o bench/bench_cpp bench/bench.cpp && ./bench/bench_cpp instancias bench_cpp.csv
+python3 bench/bench.py instancias bench_python.csv
+python3 scripts/grafico_linguagens.py
+```
+
+**Validação**: os bins produzidos pelas 4 linguagens são idênticos em
+100% das 1.000 execuções — só o tempo difere.
+
+Resultado (n=16.000, uniforme discreta, média de 10 repetições):
+
+| Algoritmo | Rust (µs) | C (µs) | C++ (µs) | Python (µs) | rust/C |
+|-----------|-----------|--------|----------|-------------|--------|
+| NF        | 609       | 204    | 208      | 741         | 2.99×  |
+| FF        | 139.231   | 90.399 | 101.605  | 1.899.441   | 1.54×  |
+| BF        | 252.449   | 108.734| 135.771  | 2.319.910   | 2.32×  |
+| FFD       | 134.031   | 106.616| 103.042  | 2.007.822   | 1.26×  |
+| BFD       | 312.125   | 161.557| 168.337  | 3.372.516   | 1.93×  |
+
+Rust fica 1.3–3× mais lento que C/C++ (custo do safe Rust: bounds
+checking e abstrações de `Vec`). Python fica 10–15× atrás nos
+quadráticos — mas apenas 1.2× no NF linear (otimização de laços do
+CPython 3.11). A assintótica é idêntica; o que muda é a constante —
+exatamente a distinção O-grande × realidade do eixo E1.
+
 ## Reprodutibilidade
 
 - Sementes determinísticas (splitmix64 misturado com n): mesma semente →

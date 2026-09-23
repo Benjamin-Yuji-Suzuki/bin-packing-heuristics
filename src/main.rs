@@ -54,6 +54,36 @@ enum Command {
     },
     /// Lista as distribuições disponíveis.
     Dists,
+    /// Exporta as instâncias do experimento em binário (f64 LE) para
+    /// uso pelas implementações em outras linguagens — garante que
+    /// TODAS as linguagens medem exatamente os mesmos itens.
+    Export {
+        /// Tamanhos de instância
+        #[arg(
+            short,
+            long,
+            value_delimiter = ',',
+            default_value = "1000,2000,4000,8000,16000"
+        )]
+        sizes: Vec<usize>,
+        /// Repetições por configuração
+        #[arg(short, long, default_value_t = 10)]
+        reps: usize,
+        /// Diretório de saída (um arquivo .f64 por instância)
+        #[arg(short, long, default_value = "instancias")]
+        out: String,
+    },
+    /// Benchmark comparativo entre linguagens: lê as instâncias
+    /// exportadas, roda as heurísticas e grava CSV (mesmo formato do
+    /// experiment). O timing é feito AQUI, em Rust, lendo cada arquivo.
+    Bench {
+        /// Diretório com os arquivos .f64 exportados
+        #[arg(short, long, default_value = "instancias")]
+        dir: String,
+        /// CSV de saída
+        #[arg(short, long, default_value = "bench_rust.csv")]
+        out: String,
+    },
 }
 
 fn parse_dist(name: &str) -> Distribution {
@@ -161,6 +191,84 @@ fn main() {
                     eprintln!();
                 }
             }
+        }
+        Command::Export { sizes, reps, out } => {
+            let dist_list: Vec<Distribution> = Distribution::all().to_vec();
+            std::fs::create_dir_all(&out).expect("criar diretório");
+            let mut total = 0usize;
+            for &dist in &dist_list {
+                for &n in &sizes {
+                    for rep in 0..reps {
+                        let seed = 1000 * (rep as u64 + 1) + n as u64;
+                        let items = generate(n, dist, seed);
+                        let fname = format!("{}/{}_n{}_r{}.f64", out, dist.name(), n, rep);
+                        let bytes: Vec<u8> = items.iter().flat_map(|x| x.to_le_bytes()).collect();
+                        std::fs::write(&fname, &bytes).expect("gravar instância");
+                        total += 1;
+                    }
+                }
+            }
+            eprintln!("{total} instâncias exportadas em {out}/");
+        }
+        Command::Bench { dir, out } => {
+            use bpp::experiment::run_algorithm;
+            use std::time::Instant;
+            let mut results = Vec::new();
+            let mut entries: Vec<_> = std::fs::read_dir(&dir)
+                .expect("ler diretório")
+                .filter_map(|e| e.ok())
+                .map(|e| e.path())
+                .filter(|p| p.extension().map_or(false, |x| x == "f64"))
+                .collect();
+            entries.sort();
+            for path in entries {
+                let fname = path.file_stem().unwrap().to_string_lossy().to_string();
+                // nome do arquivo: {dist}_n{n}_r{rep} — dist contém '_',
+                // então quebramos pela DIREITA
+                let mut parts = fname.rsplitn(3, '_');
+                let rep: usize = parts
+                    .next()
+                    .unwrap_or("r0")
+                    .trim_start_matches('r')
+                    .parse()
+                    .unwrap_or(0);
+                let n: usize = parts
+                    .next()
+                    .unwrap_or("n0")
+                    .trim_start_matches('n')
+                    .parse()
+                    .unwrap_or(0);
+                let dist_name = parts.next().unwrap_or("?").to_string();
+                let bytes = std::fs::read(&path).expect("ler instância");
+                let items: Vec<f64> = bytes
+                    .chunks_exact(8)
+                    .map(|c| f64::from_le_bytes(c.try_into().unwrap()))
+                    .collect();
+                let lb = lower_bound_l2(&items);
+                let total_size: f64 = items.iter().sum();
+                for &alg in ALGORITHMS.iter() {
+                    // aquecimento (uma execução descartada) + medição
+                    let _ = run_algorithm(alg, &items);
+                    let start = Instant::now();
+                    let sol = run_algorithm(alg, &items);
+                    let elapsed = start.elapsed().as_micros();
+                    results.push(bpp::experiment::RunResult {
+                        algorithm: alg,
+                        distribution: dist_name.clone(),
+                        n,
+                        rep,
+                        bins: sol.bins,
+                        lower_bound: lb,
+                        ratio_vs_lb: sol.bins as f64 / lb.max(1) as f64,
+                        time_us: elapsed,
+                        total_size,
+                    });
+                }
+            }
+            let mut f = std::fs::File::create(&out).expect("criar CSV");
+            f.write_all(to_csv(&results).as_bytes())
+                .expect("gravar CSV");
+            eprintln!("{} resultados (rust) gravados em {out}", results.len());
         }
     }
 }
