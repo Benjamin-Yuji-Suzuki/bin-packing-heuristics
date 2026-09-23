@@ -65,21 +65,21 @@ python3 scripts/grafico_linguagens.py
 100% das execuções — só o tempo difere. Números reportados: mediana de
 3 execuções completas (cada uma = 10 repetições por configuração).
 
-Resultado (n=16.000, uniforme discreta, mediana de 3 execuções):
+Resultado (n=16.000, uniforme discreta, mediana de 3 execuções, máquina ociosa):
 
 | Algoritmo | Rust (µs) | C (µs)  | C++ (µs) | Python (µs) | rust/C |
 |-----------|-----------|---------|----------|-------------|--------|
-| NF        | 39        | 70      | 64       | 741         | 0.55×  |
-| FF        | 26.656    | 25.423  | 24.851   | 1.899.441   | 1.05×  |
-| BF        | 31.606    | 34.226  | 35.757   | 2.319.910   | 0.92×  |
-| FFD       | 28.480    | 28.129  | 27.589   | 2.007.822   | 1.01×  |
-| BFD       | 41.211    | 42.305  | 42.288   | 3.372.516   | 0.97×  |
+| NF        | 38        | 67      | 64       | 559         | 0.57×  |
+| FF        | 26.847    | 25.381  | 24.965   | 1.412.408   | 1.06×  |
+| BF        | 31.202    | 33.714  | 35.703   | 1.761.366   | 0.93×  |
+| FFD       | 28.591    | 27.961  | 27.457   | 1.527.636   | 1.02×  |
+| BFD       | 40.784    | 41.670  | 41.328   | 2.551.558   | 0.98×  |
 
-**Rust ganha de C/C++ em NF (1.8× mais rápido), BF e BFD, e empata em
-FF/FFD (≤5%, dentro do ruído)** — com C/C++ em `-O3 -march=native` e
-Rust em `target-cpu=native` (fair play: mesma configuração de
-otimização máxima para todos). Python fica ~10× atrás no linear e ~75×
-nos quadráticos.
+**Rust ganha claramente de C/C++ em NF (1.7× mais rápido) e BF, empata
+em BFD, e fica 2–8% atrás em FF/FFD (margem próxima do ruído)** — com
+C/C++ em `-O3 -march=native` e Rust em `target-cpu=native` (fair play:
+mesma configuração de otimização máxima para todos). Python fica ~15×
+atrás no linear e ~53–63× nos quadráticos.
 
 Como? Variantes "bins-only" (mesmo trabalho que as outras linguagens,
 sem rastreio de atribuição) + idiomas que o LLVM vetoriza: iteradores
