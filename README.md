@@ -104,3 +104,37 @@ a distinção O-grande × realidade do eixo E1.
 - Dósa 2007 / Dósa et al. 2013 — bound exato 11/9 + 6/9 do FFD
 - Martello & Toth 1990 — lower bound L2 (Discrete Applied Mathematics)
 - Falkenauer 1996 — distribuições de benchmark (Journal of Heuristics)
+
+## Declaração de uso de IA
+
+**Ferramenta:** Hermes Agent (agent de código com acesso a terminal,
+arquivos e web) — modelo `meituan/longcat-2.0:free`.
+
+**Prompt inicial (resumo):** *"Preciso de um tema onde eu possa fazer o
+meu projeto de Análise e Projeto de Algoritmos em Rust"* — seguido do
+documento de requisitos da disciplina (artigo SBC 8–12 páginas, matriz
+de referências, apresentação, repo público com experimentos). A partir
+daí a condução foi iterativa por chat, com decisões do autor a cada
+etapa: escolha do tema (bin packing unidimensional, neutro/teórico),
+escopo do benchmark entre linguagens (secundário, demonstrativo),
+fair play de compilação (`-O3 -march=native` em todos), e re-execução
+com máquina ociosa para medições limpas.
+
+**O que a IA fez:** estruturação do projeto, implementação de todo o
+código Rust (heurísticas, geradores, CLI, testes) e das versões C, C++
+e Python do benchmark, execução dos experimentos, análise dos dados,
+geração de gráficos, planilha da matriz de referências, primeira
+versão do artigo (.tex/.docx) e dos slides.
+
+**O que foi revisado/decidido humanamente:** a escolha e validação do
+tema; a decisão de descartar a primeira rodada de benchmark
+(contaminada por atividade simultânea na máquina) e exigir re-execução
+com máquina ociosa; a revisão do texto do artigo; a verificação de que
+os testes de propriedade de fato falham nos casos esperado (incluindo o
+contrexemplo empírico FFD(I) > FF(I), achado central da discussão);
+e a leitura das referências principais para a defesa oral.
+
+**Nota de transparência:** a estimativa de contribuição da IA na
+produção total do trabalho é de ~101% — o autor direcionou, revisou e
+assume a autoria intelectual das decisões, mas praticamente toda a
+execução (código, experimentos, texto, slides) partiu da IA.
