@@ -211,7 +211,7 @@ fn main() {
             eprintln!("{total} instâncias exportadas em {out}/");
         }
         Command::Bench { dir, out } => {
-            use bpp::experiment::run_algorithm;
+            use bpp::experiment::run_algorithm_bins;
             use std::time::Instant;
             let mut results = Vec::new();
             let mut entries: Vec<_> = std::fs::read_dir(&dir)
@@ -247,19 +247,21 @@ fn main() {
                 let lb = lower_bound_l2(&items);
                 let total_size: f64 = items.iter().sum();
                 for &alg in ALGORITHMS.iter() {
-                    // aquecimento (uma execução descartada) + medição
-                    let _ = run_algorithm(alg, &items);
+                    // aquecimento (uma execução descartada) + medição —
+                    // usa as variantes bins-only (mesmo trabalho que as
+                    // outras linguagens do benchmark)
+                    let _ = run_algorithm_bins(alg, &items);
                     let start = Instant::now();
-                    let sol = run_algorithm(alg, &items);
+                    let bins = run_algorithm_bins(alg, &items);
                     let elapsed = start.elapsed().as_micros();
                     results.push(bpp::experiment::RunResult {
                         algorithm: alg,
                         distribution: dist_name.clone(),
                         n,
                         rep,
-                        bins: sol.bins,
+                        bins,
                         lower_bound: lb,
-                        ratio_vs_lb: sol.bins as f64 / lb.max(1) as f64,
+                        ratio_vs_lb: bins as f64 / lb.max(1) as f64,
                         time_us: elapsed,
                         total_size,
                     });

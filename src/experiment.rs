@@ -1,6 +1,7 @@
 use crate::algorithms::{
-    best_fit, best_fit_decreasing, first_fit, first_fit_decreasing, lower_bound_l2, next_fit,
-    Solution,
+    best_fit, best_fit_bins, best_fit_decreasing, best_fit_decreasing_bins, first_fit,
+    first_fit_bins, first_fit_decreasing, first_fit_decreasing_bins, lower_bound_l2, next_fit,
+    next_fit_bins, Solution,
 };
 use crate::generators::{generate, Distribution};
 use std::time::Instant;
@@ -30,6 +31,21 @@ pub fn run_algorithm(name: &str, items: &[f64]) -> Solution {
         "BF" => best_fit(items),
         "FFD" => first_fit_decreasing(items),
         "BFD" => best_fit_decreasing(items),
+        _ => panic!("algoritmo desconhecido: {name}"),
+    }
+}
+
+/// Executa um algoritmo por nome retornando APENAS a contagem de bins
+/// (variantes otimizadas). É o mesmo trabalho que as implementações
+/// C/C++/Python do benchmark fazem — usado na comparação entre
+/// linguagens.
+pub fn run_algorithm_bins(name: &str, items: &[f64]) -> usize {
+    match name {
+        "NF" => next_fit_bins(items),
+        "FF" => first_fit_bins(items),
+        "BF" => best_fit_bins(items),
+        "FFD" => first_fit_decreasing_bins(items),
+        "BFD" => best_fit_decreasing_bins(items),
         _ => panic!("algoritmo desconhecido: {name}"),
     }
 }

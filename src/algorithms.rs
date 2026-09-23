@@ -115,6 +115,90 @@ pub fn best_fit_decreasing(items: &[f64]) -> Solution {
     best_fit(&sorted)
 }
 
+// ---------------------------------------------------------------------------
+// Variantes "bins-only" — usadas na comparação entre linguagens.
+//
+// As implementações C/C++/Python do benchmark apenas CONTAM o número
+// de bins; as versões completas acima também rastreiam a atribuição
+// item->bin (pushes no laço interno). Para uma comparação justa, estas
+// variantes fazem exatamente o mesmo trabalho das outras linguagens:
+// mesmo algoritmo, mesma saída (contagem), sem rastreio.
+//
+// Otimizações aplicadas (todas seguras, sem unsafe):
+//   - iteradores no lugar de indexação (elimina bounds check);
+//   - Vec::with_capacity (sem realocação);
+//   - sort_unstable_by com f64::total_cmp (comparação por padrão de
+//     bits, sem ramificação de NaN; qsort do C paga indireção de
+//     função por comparação).
+// ---------------------------------------------------------------------------
+
+#[inline]
+pub fn next_fit_bins(items: &[f64]) -> usize {
+    let mut bins = 1usize;
+    let mut residual = 1.0f64;
+    for &x in items {
+        if x <= residual + 1e-9 {
+            residual -= x;
+        } else {
+            bins += 1;
+            residual = 1.0 - x;
+        }
+    }
+    bins
+}
+
+#[inline]
+pub fn first_fit_bins(items: &[f64]) -> usize {
+    let mut residual: Vec<f64> = Vec::with_capacity(items.len());
+    'outer: for &x in items {
+        for r in residual.iter_mut() {
+            if x <= *r + 1e-9 {
+                *r -= x;
+                continue 'outer;
+            }
+        }
+        residual.push(1.0 - x);
+    }
+    residual.len()
+}
+
+#[inline]
+pub fn best_fit_bins(items: &[f64]) -> usize {
+    let mut residual: Vec<f64> = Vec::with_capacity(items.len());
+    for &x in items {
+        // Best Fit = bin com MENOR resíduo que ainda comporta x.
+        // Passada 1: redução de mínimo branchless — bins que não
+        // comportam x entram como +inf (mínimo mascarado, vetorizável
+        // como minpd). Passada 2: posição do mínimo (early-exit).
+        // Semântica idêntica ao argmin escalar: devolve o primeiro bin
+        // com o menor resíduo viável.
+        let mut best_r = f64::INFINITY;
+        for &r in residual.iter() {
+            let cand = if x <= r + 1e-9 { r } else { f64::INFINITY };
+            best_r = best_r.min(cand);
+        }
+        if best_r.is_finite() {
+            let i = residual.iter().position(|&r| r == best_r).unwrap();
+            residual[i] -= x;
+        } else {
+            residual.push(1.0 - x);
+        }
+    }
+    residual.len()
+}
+
+pub fn first_fit_decreasing_bins(items: &[f64]) -> usize {
+    let mut sorted = items.to_vec();
+    sorted.sort_unstable_by(|a, b| b.total_cmp(a));
+    first_fit_bins(&sorted)
+}
+
+pub fn best_fit_decreasing_bins(items: &[f64]) -> usize {
+    let mut sorted = items.to_vec();
+    sorted.sort_unstable_by(|a, b| b.total_cmp(a));
+    best_fit_bins(&sorted)
+}
+
 /// Lower bound L2 de Martello & Toth (1990) para bin packing.
 ///
 /// O bound L1 = ceil(soma dos tamanhos) é trivial; o L2 refina L1
@@ -234,6 +318,32 @@ mod tests {
                         lb <= ffd,
                         "L2={lb} > FFD={ffd} ({:?}, n={n}, rep={rep})",
                         dist
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn variantes_bins_only_iguais_as_completas() {
+        // As variantes bins-only (usadas no benchmark entre linguagens)
+        // devem devolver exatamente o mesmo número de bins que as
+        // versões completas com rastreio.
+        use crate::generators::{generate, Distribution};
+        for &dist in Distribution::all().iter() {
+            for n in [10usize, 50, 200] {
+                for rep in 0..10u64 {
+                    let items = generate(n, dist, 1234 + rep);
+                    assert_eq!(next_fit(&items).bins, next_fit_bins(&items));
+                    assert_eq!(first_fit(&items).bins, first_fit_bins(&items));
+                    assert_eq!(best_fit(&items).bins, best_fit_bins(&items));
+                    assert_eq!(
+                        first_fit_decreasing(&items).bins,
+                        first_fit_decreasing_bins(&items)
+                    );
+                    assert_eq!(
+                        best_fit_decreasing(&items).bins,
+                        best_fit_decreasing_bins(&items)
                     );
                 }
             }

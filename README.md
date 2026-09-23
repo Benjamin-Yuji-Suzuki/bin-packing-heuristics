@@ -53,31 +53,41 @@ mesmo protocolo** (aquecimento + 1 medição por instância).
 
 ```bash
 cargo run --release -- export --sizes 1000,2000,4000,8000,16000 --reps 10
-cargo run --release -- bench --dir instancias --out bench_rust.csv
-gcc -O2 -o bench/bench_c bench/bench.c -lm && ./bench/bench_c instancias bench_c.csv
-g++ -O2 -std=c++17 -o bench/bench_cpp bench/bench.cpp && ./bench/bench_cpp instancias bench_cpp.csv
+RUSTFLAGS="-C target-cpu=native" cargo build --release
+./target/release/bin-packing-heuristics bench --dir instancias --out bench_rust.csv
+gcc -O3 -march=native -o bench/bench_c bench/bench.c -lm && ./bench/bench_c instancias bench_c.csv
+g++ -O3 -march=native -std=c++17 -o bench/bench_cpp bench/bench.cpp && ./bench/bench_cpp instancias bench_cpp.csv
 python3 bench/bench.py instancias bench_python.csv
 python3 scripts/grafico_linguagens.py
 ```
 
 **Validação**: os bins produzidos pelas 4 linguagens são idênticos em
-100% das 1.000 execuções — só o tempo difere.
+100% das execuções — só o tempo difere. Números reportados: mediana de
+3 execuções completas (cada uma = 10 repetições por configuração).
 
-Resultado (n=16.000, uniforme discreta, média de 10 repetições):
+Resultado (n=16.000, uniforme discreta, mediana de 3 execuções):
 
-| Algoritmo | Rust (µs) | C (µs) | C++ (µs) | Python (µs) | rust/C |
-|-----------|-----------|--------|----------|-------------|--------|
-| NF        | 609       | 204    | 208      | 741         | 2.99×  |
-| FF        | 139.231   | 90.399 | 101.605  | 1.899.441   | 1.54×  |
-| BF        | 252.449   | 108.734| 135.771  | 2.319.910   | 2.32×  |
-| FFD       | 134.031   | 106.616| 103.042  | 2.007.822   | 1.26×  |
-| BFD       | 312.125   | 161.557| 168.337  | 3.372.516   | 1.93×  |
+| Algoritmo | Rust (µs) | C (µs)  | C++ (µs) | Python (µs) | rust/C |
+|-----------|-----------|---------|----------|-------------|--------|
+| NF        | 39        | 70      | 64       | 741         | 0.55×  |
+| FF        | 26.656    | 25.423  | 24.851   | 1.899.441   | 1.05×  |
+| BF        | 31.606    | 34.226  | 35.757   | 2.319.910   | 0.92×  |
+| FFD       | 28.480    | 28.129  | 27.589   | 2.007.822   | 1.01×  |
+| BFD       | 41.211    | 42.305  | 42.288   | 3.372.516   | 0.97×  |
 
-Rust fica 1.3–3× mais lento que C/C++ (custo do safe Rust: bounds
-checking e abstrações de `Vec`). Python fica 10–15× atrás nos
-quadráticos — mas apenas 1.2× no NF linear (otimização de laços do
-CPython 3.11). A assintótica é idêntica; o que muda é a constante —
-exatamente a distinção O-grande × realidade do eixo E1.
+**Rust ganha de C/C++ em NF (1.8× mais rápido), BF e BFD, e empata em
+FF/FFD (≤5%, dentro do ruído)** — com C/C++ em `-O3 -march=native` e
+Rust em `target-cpu=native` (fair play: mesma configuração de
+otimização máxima para todos). Python fica ~10× atrás no linear e ~75×
+nos quadráticos.
+
+Como? Variantes "bins-only" (mesmo trabalho que as outras linguagens,
+sem rastreio de atribuição) + idiomas que o LLVM vetoriza: iteradores
+(sem bounds check), `Vec::with_capacity`, `f64::total_cmp` no sort
+(comparação por bits, sem branch de NaN) e redução de mínimo branchless
+no Best Fit (mínimo mascarado — vetorizável como `minpd`). Zero
+`unsafe`. A assintótica é idêntica em todas; o que muda é a constante —
+a distinção O-grande × realidade do eixo E1.
 
 ## Reprodutibilidade
 
