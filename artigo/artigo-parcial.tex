@@ -1,0 +1,237 @@
+\documentclass[12pt]{article}
+
+\usepackage{sbc-template}
+\usepackage{graphicx,url}
+\usepackage[brazil]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{enumitem}
+\usepackage{placeins}
+\usepackage{amsmath}
+
+\hyphenation{em-pa-co-ta-men-to}
+\sloppy
+
+\title{Garantias de Pior Caso versus Desempenho Médio de\\ Heurísticas Clássicas para o Bin Packing Unidimensional:\\ um Estudo Experimental}
+
+\author{
+  Benjamin Yuji Suzuki
+    \thanks{Estudante de Ciência da Computação — Centro Universitário do Estado do Pará (CESUPA).} \inst{1}
+}
+
+\address{
+  Centro Universitário do Estado do Pará (CESUPA)\\
+  Belém -- PA -- Brazil
+  \email{benjamim24070067@aluno.cesupa.br}
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+The one-dimensional bin packing problem asks for the minimum number of unit-capacity bins needed to pack a list of items. It is NP-hard, and five classical heuristics --- Next Fit, First Fit, Best Fit and their decreasing variants --- remain the default choice in practice, backed by decades-old worst-case guarantees: ratio 2 for Next Fit, 1.7 for First/Best Fit, and the tight bound $11/9\,\mathrm{OPT}+6/9$ for First Fit Decreasing, whose additive constant was only settled in 2007. Theory, however, says little about how far these bounds are from typical behavior. We implement all five heuristics in Rust with zero external dependencies and run a controlled experiment (4 distributions, 5 instance sizes from 1{,}000 to 16{,}000 items, 10 repetitions each, 1{,}000 runs total), measuring both the approximation ratio against the Martello--Toth lower bound $L_2$ and wall-clock time. Results show the empirical ratios are far below the guarantees (e.g., FFD averages 1.001 on uniform instances against the 1.222 guarantee), that the 3-partition distribution is the hardest for every heuristic, and that the $O(n^2)$ implementations of FF/BF become prohibitive at large $n$, where the linear-time Next Fit is 170$\times$ faster but 30\% worse. We also document counterexamples where sorting hurts First Fit.
+\end{abstract}
+
+\begin{resumo}
+O problema do empacotamento unidimensional (bin packing) pede o número mínimo de recipientes de capacidade unitária necessários para alocar uma lista de itens. Ele é NP-difícil, e cinco heurísticas clássicas --- Next Fit, First Fit, Best Fit e suas variantes ordenadas --- continuam sendo a escolha padrão na prática, amparadas por garantias de pior caso com décadas: razão 2 para Next Fit, 1.7 para First/Best Fit e o limite exato $11/9\,\mathrm{OPT}+6/9$ para First Fit Decreasing, cuja constante aditiva só foi fechada em 2007. A teoria, porém, diz pouco sobre quão longe esses limites estão do comportamento típico. Implementamos as cinco heurísticas em Rust, sem dependências externas, e executamos um experimento controlado (4 distribuições, 5 tamanhos de instância de 1.000 a 16.000 itens, 10 repetições, 1.000 execuções no total), medindo tanto a razão de aproximação contra o limite inferior $L_2$ de Martello--Toth quanto o tempo de execução. Os resultados mostram que as razões empíricas ficam muito abaixo das garantias (ex.: FFD com média 1.001 em instâncias uniformes, contra a garantia de 1.222), que a distribuição de 3-partição é a mais difícil para todas as heurísticas e que as implementações $O(n^2)$ de FF/BF tornam-se proibitivas para grandes $n$, onde o Next Fit linear é 170$\times$ mais rápido, porém 30\% pior. Documentamos também contrexemplos em que ordenar piora o First Fit.
+\end{resumo}
+
+\noindent\textbf{Palavras-chave:} bin packing; heurísticas; análise de aproximação; análise experimental; FFD.
+
+\vspace{-0.5em}
+\noindent\textbf{Keywords:} bin packing; heuristics; approximation analysis; experimental analysis; FFD.
+
+\section{Introdução} \label{sec:intro}
+
+Empacotar itens em recipientes é uma das tarefas mais recorrentes da logística e da computação: alocação de arquivos em blocos de disco, tarefas em lotes de processamento, cortes de matéria-prima, e carregamento de cargas em geral. Na sua forma unidimensional, o \textbf{problema do empacotamento} (\textit{bin packing}) recebe como entrada uma lista $L = (s_1, s_2, \ldots, s_n)$ de $n$ itens com tamanhos $s_i \in (0, 1]$ e devolve como saída uma partição de $L$ em grupos (``bins'') tal que a soma dos tamanhos de cada grupo não exceda 1 e o número de grupos seja mínimo.
+
+O problema é NP-difícil, por redução de 3-PARTIÇÃO (Seção~\ref{sec:fund}). Essa intratabilidade motivou, desde os anos 1970, o estudo de \textbf{heurísticas simples}: regras de decisão de uma linha que empacotam cada item assim que ele chega. As cinco clássicas --- \textit{Next Fit} (NF), \textit{First Fit} (FF), \textit{Best Fit} (BF), \textit{First Fit Decreasing} (FFD) e \textit{Best Fit Decreasing} (BFD) --- têm garantias de pior caso consolidadas: razão 2 para NF, 1.7 para FF/BF e o limite exato $\mathrm{FFD}(I) \leq \frac{11}{9}\mathrm{OPT}(I) + \frac{6}{9}$, cuja constante aditiva correta permaneceu em aberto por 34 anos \cite{dosa2007,dosa2013}.
+
+Essas garantias, porém, respondem apenas à pergunta ``quão ruim \textit{pode} ser?''. A pergunta que interessa a quem escolhe um algoritmo na prática é ``quão ruim \textit{tipicamente} é?'' --- e é aí que a literatura clássica é silenciosa. Os resultados probabilísticos existentes (modelo \textit{random-order} de Kenyon \cite{kenyon1996}, refinados recentemente \cite{albers2021,hebbar2024,ayyadevara2025}) tratam de razões esperadas, mas não comparam o custo temporal das implementações diretas, nem cobrem as distribuições de benchmark usadas na prática \cite{falkenauer1996}.
+
+\textbf{Objetivo geral.} Confrontar experimentalmente as garantias de pior caso das cinco heurísticas clássicas com seu desempenho médio (qualidade e tempo) em instâncias sintéticas controladas.
+
+\textbf{Objetivos específicos.} (i) implementar NF, FF, BF, FFD e BFD em Rust com implementações diretas (sem estruturas auxiliares que escondam a complexidade); (ii) implementar o limite inferior $L_2$ de Martello--Toth \cite{martello1990} como denominador da razão de aproximação empírica; (iii) executar um experimento fatorial com 4 distribuições $\times$ 5 tamanhos $\times$ 10 repetições; (iv) ajustar a curva empírica de tempo à previsão assintótica e discutir as divergências; e (v) registrar contrexemplos em que a ordenação prévia piora o resultado.
+
+\textbf{Justificativa.} A lacuna identificada na matriz de referências é dupla: nenhuma das referências lidas apresenta (a) a redução formal que justifica a NP-dificuldade (que só aparece de segunda mão) nem (b) uma avaliação conjunta de qualidade $\times$ tempo das implementações diretas em distribuições de benchmark. Este artigo preenche exatamente esse espaço: um experimento reprodutível, de código aberto, que mede as duas dimensões ao mesmo tempo.
+
+O texto está organizado como segue. A Seção~\ref{sec:fund} formaliza o problema, apresenta a redução de NP-dificuldade e as garantias teóricas das heurísticas. A Seção~\ref{sec:trab} discute criticamente a literatura. A Seção~\ref{sec:met} detalha a metodologia experimental. Resultados e discussão (2º bimestre) e a conclusão comporão a versão final.
+
+\section{Fundamentação Teórica} \label{sec:fund}
+
+\subsection{Definições e notação}
+
+Seja $L = (s_1, \ldots, s_n)$ uma lista de itens com $s_i \in (0,1]$. Uma \textbf{solução viável} é uma função $f: \{1..n\} \rightarrow \{1..k\}$ tal que $\sum_{i: f(i)=j} s_i \leq 1$ para todo $j$. O \textbf{custo} de $f$ é $k$, o número de bins usados. O problema pede a solução viável de custo mínimo; esse mínimo é denotado $\mathrm{OPT}(L)$. A \textbf{razão de aproximação} de um algoritmo $A$ é $\mathrm{A}(L)/\mathrm{OPT}(L)$; no caso assintótico, $\mathrm{A}(L)/\mathrm{OPT}(L)$ quando $\mathrm{OPT}(L) \rightarrow \infty$. Dizemos que $A$ é $\rho$-\textit{aproximativo} se $\mathrm{A}(L) \leq \rho \cdot \mathrm{OPT}(L) + c$ para toda $L$, com $c$ constante.
+
+\subsection{NP-dificuldade}
+
+\begin{quote}
+\textbf{Teorema 1.} \textsc{Bin Packing} (decisão) é NP-completo.
+
+\textbf{Prova (esboço).} Pertence a NP: um certificado é a partição $f$, verificável em tempo linear. Para a NP-dureza, reduzimos 3-PARTIÇÃO, problema NP-completo no sentido forte \cite{garey1979}: dados $3m$ inteiros $a_1, \ldots, a_{3m}$ com $\sum_i a_i = mB$ e $B/4 < a_i < B/2$, decidir se existe partição em $m$ tripletas de soma exatamente $B$. Construímos a instância de bin packing com itens $s_i = a_i / B$ (capacidade de bin normalizada para 1) e perguntamos: existe solução com no máximo $m$ bins? Como $s_i > 1/4$, cabem no máximo 3 itens por bin; como $s_i < 1/2$, dois itens somam estritamente menos que 1, logo todo bin \textit{cheio} tem exatamente 3 itens. A soma total é $\sum s_i = m$, portanto qualquer solução com $m$ bins tem todos os bins com soma exatamente 1, cada um com exatamente 3 itens --- ou seja, uma 3-partição. Responder a pergunta de bin packing responde 3-PARTIÇÃO. \hfill$\square$
+\end{quote}
+
+O esboço acima conecta o eixo principal E7 (aproximação) ao secundário E3 (intratabilidade): é porque o problema é NP-difícil \textit{no sentido forte} que não se espera nem FPTAS, e a aproximação prática se dá por heurísticas com garantia \cite{williamson2011}.
+
+\subsection{As cinco heurísticas e suas garantias}
+
+A Tabela~\ref{tab:garantias} resume as heurísticas estudadas. Todas empacotam cada item no momento em que o consideram, sem reabrimento de decisão.
+
+\begin{table}[ht]
+\centering
+\caption{Heurísticas clássicas e garantias de pior caso.}
+\label{tab:garantias}
+\begin{tabular}{llll}
+\hline
+Heurística & Regra & Tempo (direta) & Garantia \\
+\hline
+NF & mantém 1 bin aberto; fecha se não couber & $O(n)$ & $2\,\mathrm{OPT}$ \\
+FF & primeiro bin (ordem de abertura) que couber & $O(n^2)$ & $1.7\,\mathrm{OPT}$ \\
+BF & bin com menor resíduo que couber & $O(n^2)$ & $1.7\,\mathrm{OPT}$ \\
+FFD & FF após ordenar decrescente & $O(n^2)$ & $\frac{11}{9}\mathrm{OPT}+\frac{6}{9}$ \\
+BFD & BF após ordenar decrescente & $O(n^2)$ & $\frac{11}{9}\mathrm{OPT}+\frac{6}{9}$ \\
+\hline
+\end{tabular}
+\end{table}
+
+As garantias de NF, FF e BF são de \cite{johnson1974}. O limite do FFD tem uma história que vale registrar: Johnson provou $11/9\,\mathrm{OPT}+4$ em 1973, em sua tese; a constante foi sucessivamente reduzida por trabalhos posteriores até Dósa fechar em $6/9$ com prova de \textit{tightness} \cite{dosa2007}, resultado depois estendido em periódico com a classificação completa por resíduo de $\mathrm{OPT} \bmod 9$ \cite{dosa2013}.
+
+\section{Trabalhos Relacionados} \label{sec:trab}
+
+A literatura sobre bin packing é vasta e pode ser organizada em três frentes que dialogam com este trabalho.
+
+\textbf{Análise de pior caso (linha clássica).} Johnson et al.\ \cite{johnson1974} estabelecem os limites de NF, FF e BF e mostram que são justos (\textit{tight}): existem instâncias adversariais que os atingem. Dósa \cite{dosa2007,dosa2013} fecha o problema da constante aditiva do FFD. Esses resultados delimitam o espaço teórico, mas respondem a uma pergunta que a prática raramente faz: instâncias adversariais construídas para maximizar a razão não se parecem com as instâncias que surgem em aplicações reais.
+
+\textbf{Análise probabilística (linha do random-order).} Kenyon \cite{kenyon1996} introduz o modelo em que a ordem de chegada é uma permutação uniforme aleatória e mostra que a razão esperada do BF fica entre 1.08 e 1.5, conjecturando $\approx 1.15$. A conjectura resiste: Albers et al.~\cite{albers2021} provam 5/4 no caso especial em que todos os itens excedem 1/3; Ayyadevara et al.~\cite{ayyadevara2025} mostram que nesse caso o BF é exatamente ótimo e resolvem o modelo i.i.d.; Hebbar et al.~\cite{hebbar2024} quebram a barreira de 3/2 no caso geral, com limite inferior 1.144 obtido computacionalmente. Balogh et al.~\cite{balogh2021}, na frente online, empurram o limite inferior universal para 1.5427. Essa linha é a mais próxima da nossa pergunta --- comportamento típico ---, mas seus resultados são assintóticos e não incluem o custo temporal das implementações. A ela se soma a análise clássica de caso médio: Coffman et al.~\cite{coffman1980} provam razão esperada exata $4/3$ para o NF sob $U(0,1]$; Bentley et al.~\cite{bentley1984} mostram que o FF é assintoticamente ótimo na expectativa e que o FFD tem excesso esperado $O(1)$ para itens limitados a $1/2$ --- resultados considerados inesperados à época, e que nosso experimento confirma empiricamente.
+
+\textbf{Metaheurísticas e benchmarks (linha experimental).} Falkenauer \cite{falkenauer1996} propõe algoritmo genético especializado em agrupamento e, no processo, define as distribuições de instâncias que se tornaram o benchmark de fato da área (ex.: $U\{1/10, \ldots, 1/2\}$, média 0.275). Martello e Toth \cite{martello1990} contribuem os limites inferiores $L_1/L_2$ e o solver exato MTP. Karmarkar e Karp \cite{karmarkar1982} mostram que a aproximação quase-exata é possível em teoria ($\mathrm{OPT}+O(\log^2 \mathrm{OPT})$), com constantes inviáveis na prática. Nenhum desses trabalhos, contudo, reporta o custo temporal das implementações \textit{diretas} (sem árvore de busca) das heurísticas clássicas em escala --- o gap que nosso experimento mede.
+
+\textbf{Síntese crítica.} As três frentes cobrem garantia (o quão ruim pode ser), expectativa (o quão ruim é em média, assintoticamente) e instâncias (como gerar benchmarks). Falta o elo: medir, lado a lado, qualidade e tempo das implementações diretas nas distribuições de benchmark. É o que fazemos a seguir.
+
+\section{Metodologia} \label{sec:met}
+
+\subsection{Implementação}
+
+As cinco heurísticas e o lower bound $L_2$ foram implementadas em Rust (edição 2021, compilador 1.98), em implementações \textit{diretas}: FF/BF percorrem a lista de bins abertos linearmente, sem árvore de segmentos nem estrutura auxiliar --- a complexidade medida é a complexidade das estruturas escolhidas. As únicas dependências externas são \texttt{rand} (geração de instâncias com semente) e \texttt{clap} (interface de linha de comando). O código, o gerador de instâncias e os scripts de experimento estão disponíveis em repositório público\footnote{\url{https://github.com/Benjamin-Yuji-Suzuki/bin-packing-heuristics}} com instruções completas de reprodução.
+
+\subsection{Instâncias}
+
+Quatro distribuições de tamanhos de itens, todas com suporte em $(0,1]$:
+\begin{itemize}[nosep]
+  \item \textbf{uniforme\_continua}: $U[0,1]$;
+  \item \textbf{uniforme\_discreta\_100}: $U\{1/100, \ldots, 1\}$;
+  \item \textbf{tres\_particao}: $U\{0.26, \ldots, 0.50\}$ --- todos os itens em $(1/4, 1/2]$, o caso 3-partição, deliberadamente difícil \cite{ayyadevara2025};
+  \item \textbf{falkenauer\_u120}: $U\{1/10, \ldots, 1/2\}$ (média 0.275) --- a distribuição clássica de benchmark \cite{falkenauer1996}.
+\end{itemize}
+
+Justificativa do gerador: distribuições uniformes são o padrão da literatura experimental da área desde \cite{falkenauer1996}; a 3-partição isola o efeito de instâncias sem itens pequenos (que serviriam de ``argamassa''); a Falkenauer replica o benchmark histórico. Sementes determinísticas (misturadas com $n$ via splitmix64) garantem reprodutibilidade total.
+
+\subsection{Métricas e protocolo}
+
+Para cada instância $I$: (i) qualidade --- $\mathrm{A}(I)/L_2(I)$, onde $L_2$ é o limite inferior de Martello--Toth \cite{martello1990}, calculado uma única vez por instância; como $L_2(I) \leq \mathrm{OPT}(I)$, tem-se $\mathrm{A}(I)/L_2(I) \geq \mathrm{A}(I)/\mathrm{OPT}(I)$ --- as razões reportadas são conservadoras (a qualidade real é ainda melhor); (ii) tempo --- relógio de parede em microssegundos (\texttt{Instant::now}/\texttt{elapsed}), medindo apenas o empacotamento, com 10 repetições por configuração e média reportada.
+
+Protocolo: 4 distribuições $\times$ 5 tamanhos ($n \in \{1{,}000, 2{,}000, 4{,}000, 8{,}000, 16{,}000\}$) $\times$ 10 repetições $\times$ 5 algoritmos $=$ \textbf{1.000 execuções}. O ajuste da curva empírica usa regressão por mínimos quadrados em escala log-log: para cada algoritmo, $\log t = \beta_0 + \beta_1 \log n$, com $\beta_1$ comparado ao expoente teórico (1 para NF, 2 para FF/BF/FFD/BFD).
+
+Ambiente: Intel Core i5-13420H (12 threads), 16 GB RAM, Linux Mint 22.3, Rust 1.98 com \texttt{--release} (LTO ativado). Cada processo de medição é single-thread.
+
+\subsection{Comparação entre linguagens}
+
+Para isolar o efeito da \textit{constante multiplicativa} --- o outro lado
+da análise assintótica, quando o expoente é o mesmo ---, as cinco
+heurísticas foram reimplementadas em C, C++ e Python (diretório
+\texttt{bench/} do repositório), consumindo \textbf{as mesmas instâncias}
+exportadas em binário (f64 little-endian) pelo gerador Rust. Todas as
+linguagens em configuração de otimização máxima: Rust com
+\texttt{--release} (LTO) e \texttt{target-cpu=native}; C e C++ com
+\texttt{gcc}/\texttt{g++} 13.3 em \texttt{-O3 -march=native}; CPython
+3.11. O protocolo é idêntico em todas: variantes que apenas contam bins
+(mesmo trabalho), aquecimento descartado e uma medição por instância, 200
+instâncias; os números reportados são a mediana de 3 execuções completas.
+A validação cruzada confirma que as quatro linguagens produzem
+\textbf{bins idênticos em 100\% das execuções} --- as diferenças medidas
+são exclusivamente de tempo.
+
+\subsection{Resultados preliminares}
+
+O experimento já foi executado na íntegra (1.000 execuções). A Tabela~\ref{tab:prelim} resume os dados que serão aprofundados na versão final.
+
+\begin{table}[ht]
+\centering
+\caption{Razão média A(I)/L2(I) por distribuição e tempo médio (µs) em $n = 16{,}000$ (distribuição uniforme discreta).}
+\label{tab:prelim}
+\begin{tabular}{lrrrrr}
+\hline
+Algoritmo & U[0,1] & U\{1/100\} & 3-partição & Falkenauer & tempo (µs) \\
+\hline
+NF  & 1.328 & 1.323 & 1.235 & 1.198 & 146 \\
+FF  & 1.021 & 1.017 & 1.131 & 1.032 & 25.527 \\
+BF  & 1.011 & 1.009 & 1.131 & 1.031 & 48.228 \\
+FFD & 1.001 & 1.000 & 1.105 & 1.014 & 30.774 \\
+BFD & 1.001 & 1.000 & 1.105 & 1.014 & 71.068 \\
+\hline
+\end{tabular}
+\end{table}
+
+Três observações antecipam a discussão da versão final. Primeira: as razões empíricas ficam drasticamente abaixo das garantias --- FFD média 1.001 em instâncias uniformes, contra a garantia 1.222; mesmo no pior cenário medido (3-partição), nenhuma heurística passou de 1.24. Segunda: a 3-partição é consistentemente a distribuição mais difícil, confirmando que a ausência de itens pequenos é o fator dominante de dificuldade. Terceira: o custo temporal separa os algoritmos muito mais que a qualidade --- em $n=16.000$, NF é $170\times$ mais rápido que FF e $487\times$ mais rápido que BFD, com razão apenas 30\% pior; e a regressão log-log de FF/BF confirma expoente $\approx 2$ (curva quadrática empírica casando com a teoria). Registramos ainda contrexemplos empíricos onde $\mathrm{FFD}(I) > \mathrm{FF}(I)$ (encontrados pelos testes de propriedade do repositório), mostrando que a ordenação prévia \textit{não} é monotonicamente benéfica --- um achado que a literatura de garantias não enfatiza.
+
+Essas razões empíricas, além disso, \textbf{validam resultados teóricos clássicos de caso médio}. A razão média do NF na distribuição uniforme contínua (1.328) confirma a razão esperada exata $4/3$ provada por Coffman et al.~\cite{coffman1980} com erro de 0.4\%; as razões do FF/BF (1.01--1.02) e do FFD/BFD (1.00--1.01) confirmam que o FF é assintoticamente ótimo na expectativa e que o FFD tem excesso esperado constante para itens limitados a $1/2$ \cite{bentley1984}; e a dificuldade da 3-partição é prevista pelo critério de simetria em torno de $1/2$, segundo o qual apenas distribuições simétricas garantem desperdício sublinear \cite{bentley1984} --- critério que a distribuição de Falkenauer igualmente viola ($U\{1/10,\ldots,1/2\}$), e cuja razão do FFD (1.014) fica de fato entre a das distribuições simétricas (1.001) e a da 3-partição (1.105), consistente com desperdício linear de constantes distintas. Registre-se, por rigor, que a 3-partição entrou no desenho \textit{porque} a literatura a aponta como difícil: a contribuição aqui é a confirmação controlada, não a descoberta. O desenho experimental desta tradição --- simulações controladas que anteciparam e inspiraram os teoremas de caso médio \cite{bentley1983} --- é o mesmo adotado neste trabalho.
+
+Na comparação entre linguagens com todas em configuração de otimização máxima (Tabela~\ref{tab:linguagens}), Rust vence em NF ($1.7\times$ mais rápido que C) e BF, empata tecnicamente em BFD, e fica 2--8\% atrás em FF e FFD --- margem próxima do ruído entre execuções. Python, interpretado, fica cerca de $15\times$ atrás no algoritmo linear e $53$--$63\times$ nos quadráticos. O resultado ilustra dois pontos do eixo E1. Primeiro: linguagens compiladas modernas convergem para o mesmo patamar quando o código é escrito de forma idiomática --- as abstrações seguras do Rust (iteradores sem verificação de limites, pré-alocação, \texttt{total\_cmp}, redução de mínimo branchless) têm custo zero quando o compilador as vetoriza. Segundo: a constante multiplicativa não é propriedade apenas da linguagem --- a primeira versão da implementação Rust, que além de indexação direta rastreava a atribuição item$\rightarrow$bin (trabalho que as demais linguagens não executavam), media $1.3$--$3\times$ o tempo de C; equalizar o trabalho e adotar idiomas vetorizáveis inverteu o placar.
+
+\begin{table}[ht]
+\centering
+\caption{Tempo mediano (µs) por linguagem, $n = 16{,}000$, distribuição uniforme discreta; mediana de 3 execuções completas (10 repetições cada), máquina ociosa. Bins idênticos em 100\% das 9.000 comparações (validação cruzada).}
+\label{tab:linguagens}
+\begin{tabular}{lrrrrr}
+\hline
+Algoritmo & Rust & C & C++ & Python & rust/C \\
+\hline
+NF  & 38 & 67 & 64 & 559 & 0.57$\times$ \\
+FF  & 26.847 & 25.381 & 24.965 & 1.412.408 & 1.06$\times$ \\
+BF  & 31.202 & 33.714 & 35.703 & 1.761.366 & 0.93$\times$ \\
+FFD & 28.591 & 27.961 & 27.457 & 1.527.636 & 1.02$\times$ \\
+BFD & 40.784 & 41.670 & 41.328 & 2.551.558 & 0.98$\times$ \\
+\hline
+\end{tabular}
+\end{table}
+
+\section{Cronograma do 2º Bimestre}
+
+\begin{itemize}[nosep]
+  \item Ampliar a escala até $n = 64.000$ e adicionar $n$ intermediários para afinar a regressão;
+  \item Implementar solver exato (branch-and-bound com $L_2$) para instâncias pequenas ($n \leq 100$), permitindo razão contra $\mathrm{OPT}$ verdadeiro;
+  \item Adicionar o experimento \textit{random-order} (BF em permutação aleatória) para dialogar com a conjectura de Kenyon \cite{kenyon1996} e o 1.144 de \cite{hebbar2024};
+  \item Escrever Seções 4 (Resultados e Discussão) e 5 (Conclusão) com os gráficos definitivos.
+\end{itemize}
+
+\section{Declaração de uso de ferramentas de IA}
+
+O desenvolvimento deste trabalho contou com apoio de ferramentas de IA generativa ao longo de todas as etapas. A tabela abaixo declara as ferramentas utilizadas, suas finalidades e as revisões humanas realizadas, em cumprimento aos requisitos de integridade acadêmica da disciplina. Trabalho individual.
+
+\begin{table}[ht]
+\centering
+\footnotesize
+\begin{tabular}{p{2.9cm}p{3.0cm}p{4.9cm}p{4.9cm}}
+\hline
+\textbf{Ferramenta} & \textbf{Finalidade} & \textbf{Resumo de uso} & \textbf{Revisão humana} \\
+\hline
+\textbf{Hermes Agent}\newline\texttt{meituan/longcat-2.0:free} &
+Desenvolvimento integral do projeto &
+Estruturou o projeto; implementou todo o código Rust (heurísticas NF/FF/BF/FFD/BFD, lower bound $L_2$, gerador, CLI, 11 testes) e as versões C, C++ e Python do benchmark; executou os 1.000 experimentos; gerou gráficos e planilha de referências; redigiu a primeira versão do artigo (.tex/.docx) e dos slides. Prompt inicial: \textit{``Preciso de um tema para meu projeto de Análise de Algoritmos em Rust''}; condução iterativa por chat, com decisões do autor a cada etapa. &
+Escolha e validação do tema (bin packing unidimensional); decisão de descartar a primeira rodada do benchmark (contaminada por atividade simultânea) e exigir re-execução com máquina ociosa; revisão integral do texto do artigo; verificação de que os testes de propriedade falham nos casos esperados --- incluindo o contrexemplo empírico $\mathrm{FFD}(I) > \mathrm{FF}(I)$; leitura das referências principais para defesa oral. Verificação individual de todas as referências (Crossref/arXiv/DBLP). \\
+\hline
+\textbf{Claude Sonnet 4.6}\newline\textbf{(Thinking)}\newline Antigravity\newline(Google DeepMind) &
+Revisão acadêmica do artigo parcial (pré-entrega do 1º bimestre) &
+Leu \texttt{artigo-parcial.tex}, \texttt{referencias.bib} e \texttt{guia-de-estudo.md}; avaliou clareza, coesão, metodologia experimental, formato SBC, 16 entradas bibliográficas e declaração de IA; gerou relatório com pontuação por critério e sugestões priorizadas; aplicou as correções aprovadas. Repositório avaliado: \url{https://github.com/Benjamin-Yuji-Suzuki/bin-packing-heuristics}. &
+O autor selecionou quais correções aplicar, aprovou cada modificação individualmente antes da edição e verificou o resultado final. Nenhum arquivo foi alterado sem autorização prévia explícita. \\
+\hline
+\end{tabular}
+\end{table}
+
+\noindent\textit{Nota de transparência:} a estimativa de contribuição das ferramentas de IA na produção total do trabalho é de $\approx 101\%$ --- o autor direcionou, revisou e assume a autoria intelectual de todas as decisões, mas praticamente toda a execução (código, experimentos, texto, slides) partiu da IA.
+
+
+\bibliographystyle{sbc}
+\bibliography{referencias}
+
+\end{document}
