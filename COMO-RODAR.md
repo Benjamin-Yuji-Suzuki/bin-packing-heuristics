@@ -182,6 +182,63 @@ artigo como resultado negativo, não como sucesso.
 
 ---
 
+## 4b. Busca de pior caso + velocidade de cada algoritmo — ~30 s
+
+Este é o comando que **fecha a lacuna de escopo** apontada em
+`EVALUACAO-CRITICA.md`: o artigo promete confrontar garantias de pior
+caso, e o experimento anterior só media instâncias aleatórias.
+
+```bash
+# busca o pior caso por hill climbing, contra o ÓTIMO EXATO
+cargo run --release --bin piorcasa 12 400
+
+# mais instancias e mais tentativas = mais chance de achar pior caso
+cargo run --release --bin piorcasa 16 6000
+
+# so um algoritmo
+cargo run --release --bin piorcasa 12 400 FF
+```
+
+**O que ele faz:** perturba o multiconjunto de tamanhos (passos de 1/1000 e
+1/10000, que cobrem as faixas críticas 1/2, 1/3, 1/4...), calcula o ótimo
+exato por branch-and-bound e mede a razão A(I)/OPT(I) de cada heurística.
+Reinicia a instância de vez em quando para escapar de ruins locais.
+
+**Resultado que ele mostra no terminal:**
+
+```
+alg         OPT    A(I) max       razão      garantia   distância
+NF            8          11      1.3750        2.0000      0.6250
+FF            7           9      1.2857        1.7000      0.4143
+FFD           4           5      1.2500        1.3889      0.1389
+```
+
+E em seguida a **velocidade de cada algoritmo**, que é o que interessa para
+o artigo:
+
+```
+--- n = 16000 ---
+alg         bins      tempo (µs)         vs NF
+NF         13333          106.00          1.0x
+FF         10667        35661.00        336.4x
+BF         10667        63001.00        594.3x
+FFD        10667        50757.00        478.8x
+BFD        10667        80364.00        758.2x
+```
+
+**Leia assim:** ao ir de n = 1.000 para n = 16.000 (16× mais itens), o NF
+custa 26× mais tempo e o FF custa 230× mais. É a assinatura da complexidade
+linear contra a quadrática, visível num terminal. E a coluna "vs NF" mostra
+que a vantagem do linear **cresce** — 38,8× em n = 1.000, 336× em n = 16.000.
+
+**Por que a razão de pior caso não atinge a garantia:** o hill climbing
+plateau em ~1,29 para o First Fit, contra a garantia de 1,7. Atingir 1,7
+exige a construção canônica de Johnson et al. (1974), que é específica e não
+foi reproduzida aqui. **Esse é o resultado honesto**: a busca gera
+aproximações, não prova que o limite é 1,7 nem que é 1,29.
+
+---
+
 ## 5. Progresso e ordenação — segundos
 
 ```bash
@@ -255,6 +312,7 @@ duas para a bibliografia. Resultado: 14 páginas, 6 figuras, 5 tabelas.
 | 2 | `bash scripts/rebench.sh` | **~65 min** |
 | 3 | `bash scripts/bnb.sh` | ~26 s |
 | 4 | `bin-packing-heuristics worstcase` | ~6 s |
+| 4b | `piorcasa` (pior caso + velocidade) | ~30 s |
 | 5 | `progress` / `sorted-vs-unsorted` | ~5 s |
 | 6 | scripts Python dos gráficos | ~20 s |
 | 7 | LaTeX ×4 passadas | ~15 s |
