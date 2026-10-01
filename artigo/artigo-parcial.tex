@@ -108,7 +108,7 @@ As garantias de NF, FF e BF são de \cite{johnson1974}. O limite do FFD tem uma 
 
 A literatura sobre bin packing é vasta e pode ser organizada em três frentes que dialogam com este trabalho.
 
-\textbf{Análise de pior caso (linha clássica).} Johnson et al.\ \cite{johnson1974} estabelecem os limites de NF, FF e BF e mostram que são justos (\textit{tight}): existem instâncias adversariais que os atingem. Dósa \cite{dosa2007,dosa2013} fecha o problema da constante aditiva do FFD. Esses resultados delimitam o espaço teórico, mas respondem a uma pergunta que a prática raramente faz: instâncias adversariais construídas para maximizar a razão não se parecem com as instâncias que surgem em aplicações reais.
+\textbf{Análise de pior caso (linha clássica).} Johnson et al.~\cite{johnson1974} estabelecem os limites de NF, FF e BF e mostram que são justos (\textit{tight}): existem instâncias adversariais que os atingem. Dósa \cite{dosa2007,dosa2013} fecha o problema da constante aditiva do FFD. Esses resultados delimitam o espaço teórico, mas respondem a uma pergunta que a prática raramente faz: instâncias adversariais construídas para maximizar a razão não se parecem com as instâncias que surgem em aplicações reais.
 
 \textbf{Análise probabilística (linha do random-order).} Kenyon \cite{kenyon1996} introduz o modelo em que a ordem de chegada é uma permutação uniforme aleatória e mostra que a razão esperada do BF fica entre 1.08 e 1.5, conjecturando $\approx 1.15$. A conjectura resiste: Albers et al.~\cite{albers2021} provam 5/4 no caso especial em que todos os itens excedem 1/3; Ayyadevara et al.~\cite{ayyadevara2025} mostram que nesse caso o BF é exatamente ótimo e resolvem o modelo i.i.d.; Hebbar et al.~\cite{hebbar2024} quebram a barreira de 3/2 no caso geral, com limite inferior 1.144 obtido computacionalmente. Balogh et al.~\cite{balogh2021}, na frente online, empurram o limite inferior universal para 1.5427. Essa linha é a mais próxima da nossa pergunta --- comportamento típico ---, mas seus resultados são assintóticos e não incluem o custo temporal das implementações. A ela se soma a análise clássica de caso médio: Coffman et al.~\cite{coffman1980} provam razão esperada exata $4/3$ para o NF sob $U(0,1]$; Bentley et al.~\cite{bentley1984} mostram que o FF é assintoticamente ótimo na expectativa e que o FFD tem excesso esperado $O(1)$ para itens limitados a $1/2$ --- resultados considerados inesperados à época, e que nosso experimento confirma empiricamente.
 
@@ -292,10 +292,13 @@ Os resultados preliminares apresentados sustentam a tese de que o comportamento 
 \section{Cronograma do 2º Bimestre}
 
 \begin{itemize}[nosep]
-  \item Ampliar a escala até $n = 64.000$ e adicionar $n$ intermediários para afinar a regressão;
-  \item Implementar solver exato (branch-and-bound com $L_2$) para instâncias pequenas ($n \leq 100$), permitindo razão contra $\mathrm{OPT}$ verdadeiro;
+  \item Ampliar a escala até $n = 256.000$ (O GMP atual de 16.000 já é rapidíssimo: o FF completo leva $\approx 25$ ms, de modo que a afirmação de \emph{impraticabilidade} para grandes $n$ ainda precisa de evidência em escala maior);
+  \item \textbf{(já feito)} Solver exato por branch-and-bound com validação de viabilidade e conferência contra busca sem podas --- permite razão contra $\mathrm{OPT}$ verdadeiro em $n \leq 60$;
+  \item \textbf{(já feito)} Ajuste da curva empírica de tempo: expoentes medidos $\beta_1 \in [1{,}86;\,1{,}97]$ para as séries quadráticas, com $R^2 \geq 0{,}996$ (Tabela~\ref{tab:expoentes});
+  \item \textbf{(já feito)} Comparação entre linguagens sob fair-play, com todas as versões em otimização máxima e o processo fixado num \emph{performance core};
+  \item \textbf{(feito, resultado negativo)} Famílias adversariais de pior caso: medidas contra o ótimo exato, \emph{não} atingem as garantias teóricas (Seção~\ref{sec:adversarial}); resta construir as instâncias canônicas de Johnson et al.~\cite{johnson1974} para confrontar diretamente o limite de $1{,}7$ do First Fit;
   \item Adicionar o experimento \textit{random-order} (BF em permutação aleatória) para dialogar com a conjectura de Kenyon \cite{kenyon1996} e o 1.144 de \cite{hebbar2024};
-  \item Escrever Seções 4 (Resultados e Discussão) e 5 (Conclusão) com os gráficos definitivos.
+  \item Escrever as Seções de Resultados e Discussão e de Conclusão com os gráficos definitivos.
 \end{itemize}
 
 \section{Declaração de uso de ferramentas de IA}
