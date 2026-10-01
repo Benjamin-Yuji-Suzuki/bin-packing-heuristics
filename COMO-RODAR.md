@@ -333,7 +333,31 @@ pdflatex artigo-parcial.tex && bibtex artigo-parcial \
 ```
 
 Quatro passadas: duas para as referências cruzadas (`\ref`) resolverem e
-duas para a bibliografia. Resultado: 14 páginas, 6 figuras, 5 tabelas.
+duas para a bibliografia. Resultado: 18 páginas, 6 figuras, 8 tabelas.
+
+### Verificar que o documento é reprodutível
+
+```bash
+bash scripts/verificar_pdf_20x.sh
+```
+
+Compila o artigo **20 vezes do zero** e compara o texto extraído de cada
+PDF. Resposta: as 20 saem idênticas — nenhuma tabela muda de página,
+nenhuma referência resolve diferente, nenhum número muda de alinhamento.
+
+Isto é diferente da verificação de dados (`verificar_20x.sh`): aquela
+mede se os **números** são estáveis, esta mede se o **documento** é
+reproduzível.
+
+### Verificar que os números são estáveis
+
+```bash
+bash scripts/verificar_20x.sh 16000
+```
+
+Repete o **experimento** 20 vezes sorteando instâncias diferentes a cada
+vez (`--salt`). Medido: CV da razão média abaixo de 0,19%, e os 20
+números da Tabela 2 reproduzem dentro de 0,12%.
 
 ---
 

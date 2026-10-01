@@ -352,6 +352,7 @@ Como parte do rigor, registramos como os resultados foram validados:
   \item \textbf{Reprodutibilidade:} duas medições independentes do benchmark multi-linguagem, em condições controladas, concordam com desvio mediano de $1{,}2\%$ no tempo.
   \item \textbf{Validação do limitador:} o solver exato por \emph{branch-and-bound} foi conferido contra uma busca exata sem podas em $600$ instâncias, sem divergência, e o limitador $L_2$ foi verificado como não-superando o ótimo exato em $4.800$ instâncias.
   \item \textbf{Testes automatizados:} a suíte do repositório inclui $28$ testes cobrindo viabilidade, determinismo, garantias e casos degenerados.
+  \item \textbf{Reprodutibilidade do documento:} compilamos o artigo $20$ vezes do zero e comparamos o texto extraído de cada PDF. As $20$ saíram idênticas: nenhuma tabela muda de página, nenhuma referência cruzada resolve diferente, nenhum número muda de alinhamento. Os seis gráficos e as oito tabelas permanecem numerados sequencialmente em todas as compilações.
   \item \textbf{Robustez estatística:} repetimos o experimento completo $20$ vezes, com sorteios independentes de instâncias a cada repetição (semente mestra variando). O coeficiente de variação da razão média ficou abaixo de $0{,}19\%$ em todos os $20$ pares (heurística $\times$ distribuição), e \emph{todos os $20$ números da Tabela~\ref{tab:prelim} reproduziram dentro de $0{,}12\%$}. A tabela reporta, portanto, um número estável do problema, e não o ruído de uma execução particular.
 \end{itemize}
 
@@ -399,10 +400,11 @@ O Cronograma da Seção~\ref{sec:cronograma} detalha os próximos passos. Em ord
 
 O desenvolvimento deste trabalho contou com apoio de ferramentas de IA generativa em todas as etapas. A tabela~\ref{tab:ia} declara, para cada ferramenta, sua finalidade, o que efetivamente foi feito e a revisão humana correspondente, em cumprimento aos requisitos de integridade acadêmica da disciplina. Trabalho individual.
 
-\begin{table}[ht]
+\clearpage
+\begin{table}[htbp]
 \centering
-\footnotesize
-\renewcommand{\arraystretch}{1.35}
+\scriptsize
+\renewcommand{\arraystretch}{1.15}
 \begin{tabularx}{\textwidth}{@{}
   >{\hsize=0.62\hsize\raggedright\arraybackslash}X
   >{\hsize=0.68\hsize\raggedright\arraybackslash}X
