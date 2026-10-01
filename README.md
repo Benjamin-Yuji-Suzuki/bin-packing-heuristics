@@ -23,6 +23,11 @@ FFD/BFD ≤ 11/9·OPT + 6/9 ≈ 1.222 (Dósa 2007).
 
 ## Como rodar
 
+> **Roteiro completo:** [`COMO-RODAR.md`](COMO-RODAR.md) — todos os comandos,
+> com os tempos reais de cada um medidos nesta máquina.
+> **Armadilhas de medição:** [`ARMADILHAS-DE-MEDICAO.md`](ARMADILHAS-DE-MEDICAO.md)
+> — os 5 erros que só aparecem no número, nunca no código.
+
 ```bash
 # 0. (opcional) conferir se a máquina está livre
 bash scripts/preflight.sh
