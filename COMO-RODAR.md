@@ -349,6 +349,26 @@ Isto é diferente da verificação de dados (`verificar_20x.sh`): aquela
 mede se os **números** são estáveis, esta mede se o **documento** é
 reproduzível.
 
+### Verificar que o código é determinístico
+
+```bash
+bash scripts/verificar_determinismo.sh 20
+```
+
+Roda cada um dos 5 comandos da ferramenta 20 vezes e compara a saída
+**semântica** — bins, razão, ótimo. Os tempos são excluídos, porque
+variam a cada execução e dariam falso negativo.
+
+```
+[1/5] run ................. identico nas 20 execucoes
+[2/5] worstcase ........... identico nas 20 execucoes
+[3/5] progress ............ NF/FF/BF/FFD/BFD identicos
+[4/5] sorted-vs-unsorted .. identico nas 20 execucoes
+[5/5] experiment .......... identico nas 20 execucoes
+
+RESULTADO: todos os comandos sao DETERMINISTICOS
+```
+
 ### Verificar que os números são estáveis
 
 ```bash
