@@ -84,6 +84,59 @@ enum Command {
         #[arg(short, long, default_value = "bench_rust.csv")]
         out: String,
     },
+    /// Constrói instâncias ADVERSARIAIS (pior caso) e mede as 5
+    /// heurísticas contra o ÓTIMO EXATO (branch-and-bound). É o
+    /// experimento que confronta as garantias de pior caso com o
+    /// comportamento real nestas famílias.
+    Worstcase {
+        /// Tamanhos de instância
+        #[arg(
+            short,
+            long,
+            value_delimiter = ',',
+            default_value = "10,20,30,40,50"
+        )]
+        sizes: Vec<usize>,
+        /// Famílias: pior_nf_classico | pior_ff_meio_mais | pior_3particao | melhor_perfeito
+        #[arg(long, value_delimiter = ',')]
+        families: Vec<String>,
+    },
+    /// Mostra o PROGRESSO de uma heurística: quantos bins estão abertos
+    /// a cada item processado. Usa uma família adversarial ou aleatória.
+    Progress {
+        /// Algoritmo: NF | FF | BF | FFD | BFD (ou `todas`)
+        #[arg(short, long, default_value = "todas")]
+        alg: String,
+        /// Tamanho da instância
+        #[arg(short, long, default_value_t = 30)]
+        n: usize,
+        /// Distribuição (ignorada se --familia for dada)
+        #[arg(short, long, default_value = "tres_particao")]
+        dist: String,
+        /// Família adversarial (pior_nf_classico | pior_ff_meio_mais |
+        /// pior_3particao | melhor_perfeito); se dada, sobrepõe --dist
+        #[arg(long)]
+        familia: Option<String>,
+        /// Semente
+        #[arg(short, long, default_value_t = 42)]
+        seed: u64,
+    },
+    /// Compara vetor ORDENADO × vetor DESORDENADO: mesma instância,
+    /// mesma heurística, duas ordens de entrada. Mostra bins e tempo.
+    SortedVsUnsorted {
+        /// Tamanho da instância
+        #[arg(short, long, default_value_t = 1000)]
+        n: usize,
+        /// Distribuição
+        #[arg(short, long, default_value = "uniforme_discreta_100")]
+        dist: String,
+        /// Semente
+        #[arg(short, long, default_value_t = 42)]
+        seed: u64,
+        /// Algoritmo: NF | FF | BF | FFD | BFD (ou `todas`)
+        #[arg(short, long, default_value = "todas")]
+        alg: String,
+    },
 }
 
 fn parse_dist(name: &str) -> Distribution {
@@ -93,6 +146,34 @@ fn parse_dist(name: &str) -> Distribution {
         "tres_particao" => Distribution::ThreePartition,
         "falkenauer_u120" => Distribution::FalkenauerU120,
         other => panic!("distribuição desconhecida: {other} (veja `bpp dists`)"),
+    }
+}
+
+fn parse_family(name: &str) -> bpp::adversarial::Adversarial {
+    use bpp::adversarial::Adversarial::*;
+    match name {
+        "pior_nf_classico" => NextFitClassic,
+        "pior_ff_meio_mais" => FirstFitHalfPlus,
+        "pior_3particao" => ThreePartitionHard,
+        "melhor_perfeito" => PerfectFit,
+        other => panic!("família desconhecida: {other} (veja --help)"),
+    }
+}
+
+/// Resolve a lista de algoritmos pedida ("todas" = as 5).
+fn resolve_algs(spec: &str) -> Vec<&'static str> {
+    if spec.eq_ignore_ascii_case("todas") || spec.eq_ignore_ascii_case("all") {
+        ALGORITHMS.to_vec()
+    } else {
+        let v: Vec<&'static str> = ALGORITHMS
+            .iter()
+            .copied()
+            .filter(|a| spec.split(',').any(|s| s.trim().eq_ignore_ascii_case(a)))
+            .collect();
+        if v.is_empty() {
+            panic!("nenhum algoritmo reconhecido em {spec}");
+        }
+        v
     }
 }
 
@@ -271,6 +352,141 @@ fn main() {
             f.write_all(to_csv(&results).as_bytes())
                 .expect("gravar CSV");
             eprintln!("{} resultados (rust) gravados em {out}", results.len());
+        }
+        Command::Worstcase { sizes, families } => {
+            use bpp::adversarial::{all_adversarial, generate_adversarial};
+            use bpp::exact::optimal_bins;
+            use std::time::Instant;
+
+            let fams: Vec<_> = if families.is_empty() {
+                all_adversarial().to_vec()
+            } else {
+                families.iter().map(|s| parse_family(s)).collect()
+            };
+
+            println!(
+                "{:<20} {:>4} {:>4} |{:>16}{:>16}{:>16}{:>16}{:>16}",
+                "família", "n", "OPT", "NF", "FF", "BF", "FFD", "BFD"
+            );
+            println!("{}", "-".repeat(110));
+            for fam in fams {
+                for &n in &sizes {
+                    let items = generate_adversarial(fam, n);
+                    let opt = match optimal_bins(&items) {
+                        Some(o) => o,
+                        None => {
+                            println!(
+                                "{:<20} {:>4} {:>4} |  (branch-and-bound estourou o orçamento)",
+                                fam.name(),
+                                n,
+                                "-"
+                            );
+                            continue;
+                        }
+                    };
+                    print!("{:<20} {:>4} {:>4} |", fam.name(), n, opt);
+                    for alg in ALGORITHMS {
+                        let t0 = Instant::now();
+                        let sol = bpp::experiment::run_algorithm(alg, &items);
+                        let t = t0.elapsed().as_micros();
+                        let ratio = sol.bins as f64 / opt.max(1) as f64;
+                        print!("  {alg}:{:.3}({:>6}us)", ratio, t);
+                    }
+                    println!();
+                }
+            }
+            println!(
+                "\nOPT = número ótimo exato (branch-and-bound). Razão = A(I)/OPT(I).\n\
+                 A garantia teórica é um TETO assintótico (2, 1.7, 11/9+6/9),\n\
+                 não um valor a atingir: razões bem abaixo dele são o resultado\n\
+                 esperado e não um fracasso da heurística."
+            );
+        }
+        Command::Progress {
+            alg,
+            n,
+            dist,
+            familia,
+            seed,
+        } => {
+            use bpp::progress::trace_algorithm;
+            let items = match &familia {
+                Some(f) => {
+                    let fam = parse_family(f);
+                    eprintln!("família adversarial: {}", fam.name());
+                    bpp::adversarial::generate_adversarial(fam, n)
+                }
+                None => {
+                    let d = parse_dist(&dist);
+                    eprintln!("distribuição: {}", d.name());
+                    generate(n, d, seed)
+                }
+            };
+            let algs = resolve_algs(&alg);
+            for a in algs {
+                let pts = trace_algorithm(a, &items);
+                let sol = bpp::experiment::run_algorithm(a, &items);
+                println!("\n=== {a} — {} bins no final ===", sol.bins);
+                println!(
+                    "{:>6} {:>8} {:>10} {:>12}",
+                    "item", "tamanho", "bins_abertos", "delta"
+                );
+                let mut anterior = 0usize;
+                for p in &pts {
+                    if p.bins_open != anterior {
+                        println!(
+                            "{:>6} {:>8.3} {:>10} {:>12}",
+                            p.item_index,
+                            p.size,
+                            p.bins_open,
+                            p.bins_open - anterior
+                        );
+                        anterior = p.bins_open;
+                    }
+                }
+                println!(
+                    "(mostrados só os itens em que um bin novo foi aberto; \
+                     a curva completa é crescente e não decrescente)"
+                );
+            }
+        }
+        Command::SortedVsUnsorted {
+            n,
+            dist,
+            seed,
+            alg,
+        } => {
+            use bpp::progress::compare_sorted_unsorted;
+            let d = parse_dist(&dist);
+            let items = generate(n, d, seed);
+            println!("n={n} dist={} seed={seed}", d.name());
+            println!(
+                "{:<6} {:>14} {:>14} {:>12} {:>14} {:>14} {:>10}",
+                "alg", "bins_desord.", "bins_ord.", "delta_bins", "t_desord(us)", "t_ord(us)", "delta_t"
+            );
+            println!("{}", "-".repeat(105));
+            for a in resolve_algs(&alg) {
+                let r = compare_sorted_unsorted(a, &items);
+                println!(
+                    "{:<6} {:>14} {:>14} {:>12} {:>14} {:>14} {:>10}",
+                    r.algorithm,
+                    r.bins_unsorted,
+                    r.bins_sorted,
+                    r.bins_sorted as i64 - r.bins_unsorted as i64,
+                    r.time_unsorted_us,
+                    r.time_sorted_us,
+                    format!(
+                        "{:+.1}%",
+                        100.0 * (r.time_sorted_us as f64 - r.time_unsorted_us as f64)
+                            / r.time_unsorted_us.max(1) as f64
+                    )
+                );
+            }
+            println!(
+                "\nPara FFD/BFD a ordenação é redundante (eles já ordenam por \
+                 definição): o resultado deve ser idêntico. A diferença real \
+                 aparece em NF/FF/BF, que processam a entrada como dada."
+            );
         }
     }
 }

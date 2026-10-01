@@ -26,8 +26,25 @@ FFD/BFD ≤ 11/9·OPT + 6/9 ≈ 1.222 (Dósa 2007).
 ```bash
 cargo run --release -- run -n 20 -d tres_particao      # instância única
 cargo run --release -- experiment                       # experimento completo (grava resultados.csv)
-cargo test                                             # 10 testes (unit + integração + propriedades)
+cargo test                                             # 24 testes (unit + integração + propriedades + B&B)
+
+# ---experimentos de pior caso, progresso e ordenação ---
+cargo run --release -- worstcase --sizes 12,24,36,48    # pior/melhor caso vs ÓTIMO EXATO (B&B)
+cargo run --release -- progress --alg todas --n 30 --familia pior_3particao
+cargo run --release -- sorted-vs-unsorted --n 4000 --dist tres_particao
 ```
+
+**`worstcase`** constrói instâncias adversariais e as mede contra o ótimo
+exato (branch-and-bound), permitindo reportar a razão verdadeira
+`A(I)/OPT(I)` em vez da conservadora `A(I)/L2(I)`.
+
+**`progress`** mostra, item a item, quantos bins estão abertos — é o
+rastreamento de "como a heurística está indo" que produz o gráfico de
+progresso.
+
+**`sorted-vs-unsorted`** compara a mesma instância em ordem original e
+decrescente, medindo bins e tempo: mostra o que a ordenação realmente
+muda (e que, para FFD/BFD, não muda nada — eles já ordenam).
 
 Distribuições disponíveis (`cargo run -- dists`): `uniforme_continua`,
 `uniforme_discreta_100`, `tres_particao`, `falkenauer_u120`.
@@ -36,6 +53,9 @@ Distribuições disponíveis (`cargo run -- dists`): `uniforme_continua`,
 
 ```
 src/algorithms.rs   — NF, FF, BF, FFD, BFD, lower bound L2
+src/exact.rs        — solver exato branch-and-bound (viável até n ≈ 60)
+src/adversarial.rs  — famílias de pior caso e melhor caso
+src/progress.rs     — rastreamento item a item + ordenado × desordenado
 src/generators.rs   — gerador de instâncias (4 distribuições, semente determinística)
 src/experiment.rs   — protocolo experimental + CSV
 src/main.rs         — CLI (clap)

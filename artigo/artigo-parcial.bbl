@@ -1,0 +1,98 @@
+\begin{thebibliography}{}
+
+\bibitem[Albers et~al. 2021]{albers2021}
+Albers, S., Khan, A., and Ladewig, L. (2021).
+\newblock Best fit bin packing with random order revisited.
+\newblock {\em Algorithmica}, 83(9):2833--2858.
+
+\bibitem[Ayyadevara et~al. 2025]{ayyadevara2025}
+Ayyadevara, V., Dabas, H., Khan, A., and Sreenivas, K. V.~N. (2025).
+\newblock Near-optimal algorithms for stochastic online bin packing.
+\newblock {\em ACM Transactions on Algorithms}, 21(4):1--39.
+
+\bibitem[Balogh et~al. 2021]{balogh2021}
+Balogh, J., B{\'e}k{\'e}si, J., D{\'o}sa, G., Epstein, L., and Levin, A.
+  (2021).
+\newblock A new lower bound for classic online bin packing.
+\newblock In {\em Proceedings of the 32nd ACM-SIAM Symposium on Discrete
+  Algorithms (SODA)}, pages 1758--1777.
+
+\bibitem[Bentley et~al. 1983]{bentley1983}
+Bentley, J.~L., Johnson, D.~S., Leighton, F.~T., and McGeoch, C.~C. (1983).
+\newblock An experimental study of bin packing.
+\newblock In {\em Proceedings of the 21st Annual Allerton Conference on
+  Communication, Control, and Computing}, pages 51--60.
+
+\bibitem[Bentley et~al. 1984]{bentley1984}
+Bentley, J.~L., Johnson, D.~S., Leighton, F.~T., McGeoch, C.~C., and McGeoch,
+  L.~A. (1984).
+\newblock Some unexpected expected behavior results for bin packing.
+\newblock In {\em Proceedings of the 16th Annual ACM Symposium on Theory of
+  Computing (STOC)}, pages 279--288. ACM.
+
+\bibitem[Coffman et~al. 1980]{coffman1980}
+Coffman, E.~G., J., So, K., Hofri, M., and Yao, A. C.-C. (1980).
+\newblock A stochastic model of bin-packing.
+\newblock {\em Information and Control}, 44(2):105--115.
+
+\bibitem[D{\'o}sa 2007]{dosa2007}
+D{\'o}sa, G. (2007).
+\newblock The tight bound of first fit decreasing bin-packing algorithm is
+  {FFD(I)} $\leq$ {11/9 OPT(I)} + {6/9}.
+\newblock In {\em Combinatorics, Algorithms, Probabilistic and Experimental
+  Methodologies (ESCAPE 2007), Lecture Notes in Computer Science}, volume 4614,
+  pages 1--11, Berlin. Springer.
+
+\bibitem[D{\'o}sa et~al. 2013]{dosa2013}
+D{\'o}sa, G., Li, R., Han, X., and Tuza, Z. (2013).
+\newblock Tight absolute bound for first fit decreasing bin-packing: {FFD(L)}
+  $\leq$ {11/9 OPT(L)} + {6/9}.
+\newblock {\em Theoretical Computer Science}, 510:13--61.
+
+\bibitem[Falkenauer 1996]{falkenauer1996}
+Falkenauer, E. (1996).
+\newblock A hybrid grouping genetic algorithm for bin packing.
+\newblock {\em Journal of Heuristics}, 2(1):5--30.
+
+\bibitem[Garey and Johnson 1979]{garey1979}
+Garey, M.~R. and Johnson, D.~S. (1979).
+\newblock {\em Computers and Intractability: A Guide to the Theory of
+  NP-Completeness}.
+\newblock W. H. Freeman, San Francisco.
+
+\bibitem[Hebbar et~al. 2024]{hebbar2024}
+Hebbar, A., Khan, A., and Sreenivas, K. V.~N. (2024).
+\newblock Bin packing under random-order: Breaking the barrier of {3/2}.
+\newblock arXiv:2401.04714 [cs.DS].
+
+\bibitem[Johnson et~al. 1974]{johnson1974}
+Johnson, D.~S., Demers, A., Ullman, J.~D., Garey, M.~R., and Graham, R.~L.
+  (1974).
+\newblock Worst-case performance bounds for simple one-dimensional packing
+  algorithms.
+\newblock {\em SIAM Journal on Computing}, 3(4):299--325.
+
+\bibitem[Karmarkar and Karp 1982]{karmarkar1982}
+Karmarkar, N. and Karp, R.~M. (1982).
+\newblock An efficient approximation scheme for the one-dimensional bin-packing
+  problem.
+\newblock In {\em Proceedings of the 23rd Annual Symposium on Foundations of
+  Computer Science (FOCS)}, pages 312--320. IEEE.
+
+\bibitem[Kenyon 1996]{kenyon1996}
+Kenyon, C. (1996).
+\newblock Best-fit bin-packing with random order.
+\newblock In {\em Proceedings of the 7th ACM-SIAM Symposium on Discrete
+  Algorithms (SODA)}, pages 359--364.
+
+\bibitem[Martello and Toth 1990]{martello1990}
+Martello, S. and Toth, P. (1990).
+\newblock Lower bounds and reduction procedures for the bin packing problem.
+\newblock {\em Discrete Applied Mathematics}, 28(1):59--70.
+
+\bibitem[Williamson and Shmoys 2011]{williamson2011}
+Williamson, D.~P. and Shmoys, D.~B. (2011).
+\newblock {\em The Design of Approximation Algorithms}.
+\newblock Cambridge University Press, Cambridge.
+
+\end{thebibliography}
