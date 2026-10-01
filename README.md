@@ -24,6 +24,27 @@ FFD/BFD ≤ 11/9·OPT + 6/9 ≈ 1.222 (Dósa 2007).
 ## Como rodar
 
 ```bash
+# 0. (opcional) conferir se a máquina está livre
+bash scripts/preflight.sh
+
+# 1. benchmark das 5 heurísticas — re-grava a Tabela 2 do artigo
+bash scripts/rebench.sh            # ~35 min; ABORTA se a máquina estiver ocupada
+
+# 2. benchmark do branch-and-bound entre linguagens
+bash scripts/bnb.sh                # ~2 min; mesma política de pre-flight
+```
+
+> **Por que o pre-flight existe.** Medimos desvios de até **6,7%** entre
+> rodadas contaminadas (load 3,4–4,7) e limpas — o bastante para
+> distorcer um multiplicador como `rust/C`, que é o número reportado.
+> Os scripts agora **recusam** rodar com a máquina ocupada, em vez de
+> depender de lembrar de fechá-la.
+>
+> Se a carga residual for **apenas** o Hermes desktop (≈48% da CPU, e
+> não pode ser fechado porque é o processo que executa o script), rode
+> com `LIMITE_CARGA=1.5` e registre a carga real no artigo.
+
+```bash
 cargo run --release -- run -n 20 -d tres_particao      # instância única
 cargo run --release -- experiment                       # experimento completo (grava resultados.csv)
 cargo test                                             # 24 testes (unit + integração + propriedades + B&B)

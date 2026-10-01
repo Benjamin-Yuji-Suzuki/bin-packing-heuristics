@@ -12,6 +12,14 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+# Mesma política do rebench: não mede com a máquina ocupada.
+if ! bash scripts/preflight.sh; then
+    echo
+    echo "ABORTADO. Feche o que estiver em uso e rode de novo."
+    exit 1
+fi
+echo
+
 N_MAX="${1:-20}"
 REP="${2:-10}"
 

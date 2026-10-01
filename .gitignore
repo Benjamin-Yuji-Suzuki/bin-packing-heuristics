@@ -35,3 +35,6 @@ bench/bnb_cpp
 # rodadas de benchmark contaminadas (load 3.4-4.7, Hermes desktop ~49% CPU).
 # Descartadas: re-medir com scripts/rebench.sh em maquina ociosa.
 /bench/runs/
+
+# registro da carga no momento da medicao
+bench/carga_da_medicao.txt

@@ -7,6 +7,18 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+# Recusa rodar com a máquina ocupada: medição contaminada não reproduz.
+if ! bash scripts/preflight.sh; then
+    echo
+    echo "ABORTADO. Feche o que estiver em uso e rode de novo."
+    echo "Se a carga residual for só o Hermes desktop (que não pode ser"
+    echo "fechado), use: LIMITE_CARGA=1.5 bash scripts/rebench.sh"
+    exit 1
+fi
+echo
+CARGA_REAL=$(uptime | awk -F'load average:' '{print $2}' | awk -F, '{gsub(/ /,"",$1); print $1}')
+echo "carga no inicio da medicao: $CARGA_REAL" | tee bench/carga_da_medicao.txt
+
 echo "==> 1/5 exportando instâncias (200 arquivos .f64)"
 ./target/release/bin-packing-heuristics export --sizes 1000,2000,4000,8000,16000 --reps 10 --out instancias
 
