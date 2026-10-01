@@ -436,7 +436,7 @@ fn main() {
                     if p.bins_open != anterior {
                         println!(
                             "{:>6} {:>8.3} {:>10} {:>12}",
-                            p.item_index,
+                            p.step,
                             p.size,
                             p.bins_open,
                             p.bins_open - anterior

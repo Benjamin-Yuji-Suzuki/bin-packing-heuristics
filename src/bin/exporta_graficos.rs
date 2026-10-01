@@ -26,7 +26,7 @@ fn progresso() {
                 w.push_str(&format!(
                     "{alg},{},{n},{},{}\n",
                     dist.name(),
-                    p.item_index,
+                    p.step,
                     p.bins_open
                 ));
             }

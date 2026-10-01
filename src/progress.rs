@@ -7,23 +7,26 @@
 /// heurística abre um bin novo.
 use crate::algorithms::Solution;
 
-/// Instantâneo do estado da heurística depois de empacotar o item `i`.
+/// Instantâneo do estado da heurística depois de empacotar um item.
 #[derive(Debug, Clone)]
 pub struct ProgressPoint {
-    /// Índice do item (na ordem em que a heurística o processou).
-    pub item_index: usize,
-    /// Tamanho do item.
+    /// Posição na ordem REALMENTE processada (0 = primeiro item visto).
+    pub step: usize,
+    /// Tamanho do item, na ordem realmente processada.
     pub size: f64,
     /// Quantos bins estão abertos após este item.
     pub bins_open: usize,
 }
 
-/// Rastreia uma `Solution` completa — a lista de pontos já está pronta em
-/// `Solution.assignment` (o bin onde cada item foi colocado).
+/// Rastreia uma `Solution` — os pontos saem da leitura da execução real.
 ///
-/// Não é um novo algoritmo: é a leitura da execução real. Serve para
-/// plotar "bins abertos × item processado" sem reexecutar nada.
-pub fn trace_from_solution(items: &[f64], sol: &Solution) -> Vec<ProgressPoint> {
+/// `processed` DEVE ser a lista de itens NA ORDEM EM QUE O ALGORITMO OS
+/// PROCESSOU, e isso não é a entrada original quando o algoritmo ordena:
+/// `first_fit_decreasing` chama `first_fit` sobre a lista já ordenada, e a
+/// `assignment` que volta é indexada por essa ordem. Passar a lista
+/// original associate cada posição ao tamanho do item errado.
+pub fn trace_from_solution(processed: &[f64], sol: &Solution) -> Vec<ProgressPoint> {
+    debug_assert_eq!(processed.len(), sol.assignment.len());
     let mut points = Vec::with_capacity(sol.assignment.len());
     let mut open = 0usize;
     for (i, &b) in sol.assignment.iter().enumerate() {
@@ -33,8 +36,8 @@ pub fn trace_from_solution(items: &[f64], sol: &Solution) -> Vec<ProgressPoint> 
             open = b + 1;
         }
         points.push(ProgressPoint {
-            item_index: i,
-            size: items.get(i).copied().unwrap_or(0.0),
+            step: i,
+            size: processed.get(i).copied().unwrap_or(0.0),
             bins_open: open,
         });
     }
@@ -42,11 +45,20 @@ pub fn trace_from_solution(items: &[f64], sol: &Solution) -> Vec<ProgressPoint> 
 }
 
 /// Rastreia a execução de uma heurística por nome, do zero.
+///
+/// Para FFD/BFD os pontos saem na ordem DECRESCENTE — que é a ordem que o
+/// algoritmo de fato segue — e é essa ordem que o eixo horizontal do
+/// gráfico deve representar.
 pub fn trace_algorithm(name: &str, items: &[f64]) -> Vec<ProgressPoint> {
     let sol = crate::experiment::run_algorithm(name, items);
-    // FFD/BFD reordenam internamente: a atribuição é na ordemordenada.
-    // Para o gráfico progressivo isso é o comportamento real do algoritmo.
-    trace_from_solution(items, &sol)
+    let processed: Vec<f64> = if matches!(name, "FFD" | "BFD") {
+        let mut s = items.to_vec();
+        s.sort_by(|a, b| b.partial_cmp(a).unwrap());
+        s
+    } else {
+        items.to_vec()
+    };
+    trace_from_solution(&processed, &sol)
 }
 
 /// Resultado da comparação vetor ordenado × vetor desordenado.
@@ -100,8 +112,53 @@ pub fn compare_sorted_unsorted(algorithm: &str, items: &[f64]) -> SortedVsUnsort
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::algorithms::first_fit;
     use crate::generators::{generate, Distribution};
+
+    /// REGRESSÃO: FFD/BFD ordenam internamente, então `assignment` é
+    /// indexada pela ordem ORDENADA. Passar a lista original fazia o trace
+    /// reportar o tamanho do item errado (0,32 em vez de 0,97 no caso
+    /// medido). O `bins_open` continuava certo — o bug só aparecia no
+    /// tamanho — por isso passou despercebido no gráfico.
+    #[test]
+    fn trace_reporta_o_tamanho_certo_para_ordenadas() {
+        let items = generate(40, Distribution::UniformDiscrete100, 7);
+        let mut sorted = items.clone();
+        sorted.sort_by(|a, b| b.partial_cmp(a).unwrap());
+
+        for alg in ["NF", "FF", "BF"] {
+            let pts = trace_algorithm(alg, &items);
+            let esperado: Vec<f64> = items.clone();
+            let obtido: Vec<f64> = pts.iter().map(|p| p.size).collect();
+            assert_eq!(obtido, esperado, "{alg}: tamanhos errados na ordem original");
+        }
+        for alg in ["FFD", "BFD"] {
+            let pts = trace_algorithm(alg, &items);
+            let esperado: Vec<f64> = sorted.clone();
+            let obtido: Vec<f64> = pts.iter().map(|p| p.size).collect();
+            assert_eq!(
+                obtido, esperado,
+                "{alg}: tamanhos errados — a atribuição é indexada pela ordem ordenada"
+            );
+        }
+    }
+
+    #[test]
+    fn bins_abertos_bate_com_o_total_da_solucao() {
+        let items = generate(120, Distribution::FalkenauerU120, 3);
+        for alg in ["NF", "FF", "BF", "FFD", "BFD"] {
+            let pts = trace_algorithm(alg, &items);
+            let sol = crate::experiment::run_algorithm(alg, &items);
+            assert_eq!(
+                pts.last().unwrap().bins_open,
+                sol.bins,
+                "{alg}: último bins_open diverge de sol.bins"
+            );
+            // e o bins_open nunca diminui
+            for w in pts.windows(2) {
+                assert!(w[1].bins_open >= w[0].bins_open, "{alg}: bins_open diminuiu");
+            }
+        }
+    }
 
     #[test]
     fn trace_cresce_nunca_decresce() {
@@ -160,10 +217,10 @@ mod tests {
         // garantia melhor que o FF, mas numa instância específica pode
         // entregar resultado pior que o FF.
         let items = vec![0.34, 0.39, 0.33, 0.28, 0.36, 0.27];
-        let ff = first_fit(&items).bins;
+        let ff = crate::algorithms::first_fit(&items).bins;
         let mut s = items.clone();
         s.sort_by(|a, b| b.partial_cmp(a).unwrap());
-        let ffd = first_fit(&s).bins;
+        let ffd = crate::algorithms::first_fit(&s).bins;
         let opt = crate::exact::optimal_bins(&items).unwrap();
 
         assert_eq!(ff, 2, "FF na ordem original acerta o ótimo");

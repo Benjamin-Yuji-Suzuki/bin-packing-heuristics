@@ -123,6 +123,90 @@ mod tests {
         assert_eq!(optimal_bins(&items).unwrap(), 2);
     }
 
+    /// Propriedade load-bearing: L2 é o DENOMINADOR de todas as razões
+    /// A(I)/L2(I) do artigo. Se L2 > OPT, a razão reportada ficaria < 1 e o
+    /// argumento "conservadora" cairia por terra. Esta auditoria ampla é o
+    /// que sustenta a afirmação do texto.
+    #[test]
+    fn l2_nunca_excede_o_otimo_em_amostra_ampla() {
+        for &dist in crate::generators::Distribution::all().iter() {
+            for n in [4usize, 6, 8, 10, 12, 14] {
+                for seed in 0..120u64 {
+                    let items = crate::generators::generate(n, dist, seed);
+                    let opt = optimal_bins(&items).unwrap();
+                    let l2 = crate::algorithms::lower_bound_l2(&items);
+                    assert!(
+                        l2 <= opt,
+                        "L2={l2} > OPT={opt} em {dist:?} n={n} seed={seed}"
+                    );
+                }
+            }
+        }
+    }
+
+    /// Confere o B&B contra uma busca exata SEM podas. Se as podas estivessem
+    /// erradas (como já estiveram uma vez), os dois divergiriam.
+    #[test]
+    fn bnb_bate_com_busca_sem_podas() {
+        fn exata(items: &[f64]) -> usize {
+            let mut melhor = crate::algorithms::first_fit_decreasing(items).bins;
+            let mut v = items.to_vec();
+            v.sort_by(|a, b| b.partial_cmp(a).unwrap());
+            let mut residuos: Vec<f64> = Vec::with_capacity(v.len());
+            fn rec(it: &[f64], i: usize, r: &mut Vec<f64>, m: &mut usize) {
+                if r.len() >= *m {
+                    return;
+                }
+                if i == it.len() {
+                    *m = r.len();
+                    return;
+                }
+                for b in 0..r.len() {
+                    if it[i] <= r[b] + 1e-9 {
+                        r[b] -= it[i];
+                        rec(it, i + 1, r, m);
+                        r[b] += it[i];
+                    }
+                }
+                r.push(1.0 - it[i]);
+                rec(it, i + 1, r, m);
+                r.pop();
+            }
+            rec(&v, 0, &mut residuos, &mut melhor);
+            melhor
+        }
+        for &dist in crate::generators::Distribution::all().iter() {
+            for seed in 0..120u64 {
+                let items = crate::generators::generate(10, dist, seed);
+                assert_eq!(
+                    optimal_bins(&items).unwrap(),
+                    exata(&items),
+                    "B&B divergiu da busca exata em {dist:?} seed={seed}"
+                );
+            }
+        }
+    }
+
+    /// Viabilidade: todo resíduo de bin tem de ficar em [0, 1]. Um resíduo
+    /// negativo significaria capacidade estourada — solução inválida.
+    #[test]
+    fn solucoes_sao_viaveis() {
+        for &dist in crate::generators::Distribution::all().iter() {
+            for seed in 0..150u64 {
+                let items = crate::generators::generate(60, dist, seed);
+                for alg in ["NF", "FF", "BF", "FFD", "BFD"] {
+                    let sol = crate::experiment::run_algorithm(alg, &items);
+                    for &r in &sol.residual {
+                        assert!(
+                            (-1e-9..=1.0 + 1e-9).contains(&r),
+                            "{alg}: residuo {r} fora de [0,1] em {dist:?}"
+                        );
+                    }
+                }
+            }
+        }
+    }
+
     #[test]
     fn nunca_menor_que_o_l2_nem_qualquer_heuristica() {
         // O B&B é exato, então L2 <= OPT <= (qualquer heurística).
