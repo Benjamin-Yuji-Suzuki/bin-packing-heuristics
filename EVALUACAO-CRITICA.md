@@ -86,7 +86,7 @@ item mais valuable que sobrou, porque fecha a lacuna do item 1.
 
 ---
 
-## 🟡 4. O cronограma estava desatualizado (corrigido agora)
+## 4. O cronograma estava desatualizado (corrigido agora)
 
 Dizia "implementar solver exato" e "escrever Seções 4 e 5" — ambos **já
 feitos** ou em andamento. Se o professor comparar o cronograma com o que

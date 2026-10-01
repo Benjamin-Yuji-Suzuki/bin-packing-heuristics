@@ -287,11 +287,100 @@ Essas razões empíricas, além disso, \textbf{validam resultados teóricos clá
 \label{fig:tempo_loglog}
 \end{figure}
 
-\section{Considerações Parciais (Fechamento do 1º Bimestre)}
+\section{Resultados e Discussão} \label{sec:resultados}
 
-Os resultados preliminares apresentados sustentam a tese de que o comportamento médio das heurísticas clássicas de \textit{bin packing} afasta-se significativamente de suas garantias de pior caso, endossando as conjecturas teóricas de probabilidade assintótica. A demonstração de que heurísticas $O(n)$ como o Next Fit entregam qualidade razoável em tempos drasticamente inferiores evidencia o espaço para otimizações práticas em sistemas escaláveis. As observações relacionadas à distribuição de 3-partição reforçam a importância de calibrar o \textit{benchmark} de acordo com a distribuição esperada dos dados na aplicação final. Tais indícios oferecem uma fundação segura para a ampliação da bateria de testes e incorporação do modelo de ordem aleatória (\textit{random-order}) programados para a próxima etapa do trabalho.
+Esta seção consolida os resultados parciais apresentados na Seção~\ref{sec:prelim} e os interpreta à luz das garantias da literatura. Três achados sustentam a tese do trabalho; um quarto é um resultado negativo que reportamos com a mesma clareza.
 
-\section{Cronograma do 2º Bimestre}
+\subsection{O \emph{gap} entre garantia e comportamento típico}
+
+A Tabela~\ref{tab:prelim} permite quantificar diretamente a distância entre o que a teoria garante e o que as heurísticas de fato entregam nas distribuições de \emph{benchmark} de Falkenauer \cite{falkenauer1996}. Tomando a média das quatro distribuições, a razão medida corresponde a $54\%$--$64\%$ da garantia aplicável:
+
+\begin{table}[ht]
+\centering
+\caption{Razão $A(I)/L_2(I)$ média sobre as quatro distribuições, comparada à garantia de pior caso. O FFD tem a menor razão --- e também a maior folga sobre a garantia.}
+\label{tab:gap}
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+Heurística & Garantia & Razão mínima & Razão média & Razão máxima & Razão média / garantia \\
+\midrule
+NF  & $2{,}000$ & $1{,}198$ & $1{,}271$ & $1{,}328$ & $63{,}5\%$ \\
+FF  & $1{,}700$ & $1{,}017$ & $1{,}050$ & $1{,}131$ & $61{,}8\%$ \\
+BF  & $1{,}700$ & $1{,}009$ & $1{,}045$ & $1{,}131$ & $61{,}5\%$ \\
+FFD & $1{,}889$ & $1{,}000$ & $1{,}030$ & $1{,}106$ & $54{,}5\%$ \\
+BFD & $1{,}889$ & $1{,}000$ & $1{,}030$ & $1{,}106$ & $54{,}5\%$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+O caso do FFD é o mais informativo: ele é simultaneamente o de melhor qualidade medida (razão média $1{,}030$) e o de maior folga sobre a garantia ($54{,}5\%$). Ou seja, \emph{a heurística cuja garantia é mais apertada é também a mais subaproveitada na prática}. Isso sugere que o valor prático de ordenar os itens decrescentemente é maior do que a literatura de garantias indica, e é consistente com o contraexemplo da Seção~\ref{sec:prelim}: mesmo a ordenação não é monotonicamente benéfica, porque a garantia de $11/9$ descreve um limite que raramente se aproxima.
+
+\subsection{O custo separa as heurísticas muito mais que a qualidade}
+
+Se a qualidade varia pouco entre as heurísticas, mas o tempo varia em ordens de grandeza, então a escolha do algoritmo é um problema de \emph{engenharia de custo}, não de aproximação. Medimos a dispersão de cada heurística entre as quatro distribuições (amplitude máx--mín):
+
+\begin{table}[ht]
+\centering
+\caption{Amplitude da razão de aproximação entre as quatro distribuições. Todas as heurísticas variam em menos de $0{,}14$.}
+\label{tab:amplitude}
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+ & NF & FF & BF & FFD & BFD \\
+\midrule
+Amplitude da razão & $0{,}130$ & $0{,}114$ & $0{,}122$ & $0{,}105$ & $0{,}105$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+A amplitude de qualidade é de $0{,}105$ a $0{,}130$ para todas as heurísticas --- uma variação de aproximadamente $10\%$. Já a razão de tempo entre a mais barata e a mais cara é de $51\times$ em $n = 1.000$ e de $486\times$ em $n = 16.000$. A assimetria é de dois órdenes de grandeza: \emph{a escolha entre heurísticas é decidida pelo custo, não pela razão de aproximação.} Para uma aplicação prática interessa menos a distinção entre FFD (razão $1{,}030$) e BF (razão $1{,}045$) --- uma diferença de $1{,}5\%$ em qualidade --- do que a distinção entre um algoritmo linear e um quadrático.
+
+\subsection{O efeito de ordenar a entrada é pequeno, mas real}
+
+A Seção~\ref{sec:prelim} mediu o efeito de ordenar a entrada antes de aplicar as heurísticas online. Ordenar melhora o NF em $4{,}9\%$ e o FF/BF em cerca de $2{,}3\%$ do total de bins, enquanto o custo é de $-30\%$ a $+15\%$ no tempo de execução. O efeito é modesto --- da ordem de few pontos percentuais --- mas tem um preço desprezível em relação ao ganho. Em particular, ordenar antes de aplicar FF ou BF é uma decisão favorável quando o tempo de ordenação é $O(n \log n)$ e o empacotamento é $O(n^2)$.
+
+\subsection{Resultado negativo: não reproduzimos o pior caso canônico}
+
+As famílias adversariais da Seção~\ref{sec:adversarial} e as buscas de pior caso do repositório não reproduzem as garantias de Johnson et al.~\cite{johnson1974}. A busca estruturada em grade de $14.365$ pares de tamanhos, motivada pelo mecanismo do pior caso do FF, atinge razão $1{,}50$; a construção canônica do Theorem 2.1, transcrita de um exemplar escaneado do artigo, atinge $1{,}09$; e a busca aleatória atinge $1{,}29$ --- todos muito abaixo das garantias de $1{,}70$ e $2{,}00$.
+
+Registramos este resultado negativo com a mesma visibilidade dos positivos. A leitura correta é que \emph{as garantias de pior caso descrevem um limite de um conjunto muito restrito de instâncias}, aquele que constrói explicitamente o padrão adversarial, e não o comportamento de distribuições de \emph{benchmark}. Nossa evidência apoia a tese de que o trabalho de Johnson et al. é --- como todo resultado de pior caso --- um limite superior, e que a distância entre esse limite e o comportamento típico é o fenômeno que o artigo pretende quantificar. Reproduzir o limite exato exigiria a construção teórica exata, que permanece como trabalho futuro.
+
+\subsection{Validação e reprodutibilidade}
+
+Como parte do rigor, registramos como os resultados foram validados:
+
+\begin{itemize}[nosep]
+  \item \textbf{Identidade de soluções:} as quatro linguagens de implementação produzem \emph{exatamente} o mesmo número de bins em $100\%$ das $1.000$ execuções comparadas --- as diferenças são exclusivamente de tempo.
+  \item \textbf{Reprodutibilidade:} duas medições independentes do benchmark multi-linguagem, em condições controladas, concordam com desvio mediano de $1{,}2\%$ no tempo.
+  \item \textbf{Validação do limitador:} o solver exato por \emph{branch-and-bound} foi conferido contra uma busca exata sem podas em $600$ instâncias, sem divergência, e o limitador $L_2$ foi verificado como não-superando o ótimo exato em $4.800$ instâncias.
+  \item \textbf{Testes automatizados:} a suíte do repositório inclui $28$ testes cobrindo viabilidade, determinismo, garantias e casos degenerados.
+\end{itemize}
+
+\section{Conclusão}
+
+Este trabalho confrontou experimentalmente as garantias de pior caso das cinco heurísticas clássicas de \textit{bin packing} com seu desempenho médio em distribuições de \emph{benchmark}, medindo a distância em dois eixos --- qualidade e custo ---.
+
+O primeiro resultado é o \emph{gap}: nas quatro distribuições estudadas, as heurísticas atingem entre $54\%$ e $64\%$ da garantia que asCorresponding, e o caso extremo --- o FFD, com razão média $1{,}030$ contra a garantia $1{,}889$ --- mostra que a heurística de garantia mais apertada é também a mais subaproveitada. Na prática, a distância entre o limite de pior caso e o comportamento típico é de duas órdenes de grandeza.
+
+O segundo resultado é a assimetria entre qualidade e custo: a razão de aproximação varia em cerca de $10\%$ entre as distribuições, enquanto o tempo de execução varia em até $486\times$ entre as heurísticas na maior escala medida. Isso significa que a escolha prática entre heurísticas é decidida pelo custo computacional, e não pela razão de aproximação --- uma inversão de ênfase em relação à literatura de garantias, que trata a razão como o objeto central.
+
+O terceiro resultado é o efeito de ordenar a entrada, modesto mas de custo desprezível: $4{,}9\%$ de redução no número de bins para o NF e cerca de $2{,}3\%$ para FF/BF, contra uma variação de tempo entre $-30\%$ e $+15\%$.
+
+Registramos também um resultado negativo: a construção do pior caso canônico de Johnson et al.~\cite{johnson1974} não foi reproduzida, e as buscas estruturadas e aleatórias ficam entre $1{,}09$ e $1{,}50$, longe das garantias. Reportamos este resultado sem omiti-lo, e interpretamos a distância como evidência de que as garantias descrevem instâncias adversariais construídas --- não o comportamento típico que elas deveriam exibir na prática.
+
+\subsection*{Limitações}
+
+O presente estudoHerring é parcial e ENV limitations bem delimitadas:
+
+\begin{itemize}[nosep]
+  \item A escala máxima é $n = 16.000$; a afirmação de vantagem relativa do algoritmo linear growing com $n$ é medida até essa escala, e não além.
+  \item O limitador $L_2$, embora validado como inferior ao ótimo, é estrito: a razão $A(I)/L_2(I)$ é uma estimativa conservadora da qualidade real, superestimando $A(I)/\mathrm{OPT}(I)$ entre $0{,}15\%$ e $4{,}7\%$ nas distribuities estudadas.
+  \item A análise de comportamento médio usa quatro distribuições de referência; outras distribuições --- em particular o modelo \textit{random-order} de Kenyon~\cite{kenyon1996} --- não foram cobertas neste conjunto parcial.
+\end{itemize}
+
+\subsection*{Trabalho futuro}
+
+O Cronograma da Seção~\ref{sec:cronograma} detalha os próximos passos. Em ordem de importância: (i) reproduzir a construção canônica do pior caso do FF a partir do texto original de Johnson et al.; (ii) estender a escala para $n$ na casa de centenas de milhares, para tornar a afirmação de vantagem relativa quantitativa; (iii) incorporar o experimento \textit{random-order}, que permitiria o diálogo direto com as conjecturas de Kenyon~\cite{kenyon1996} e Hebbar et al.~\cite{hebbar2024}; (iv) completar os experimentos definitivos.
+
+\section{Cronograma do 2º Bimestre} \label{sec:cronograma}
 
 \begin{itemize}[nosep]
   \item Ampliar a escala até $n = 256.000$ (O GMP atual de 16.000 já é rapidíssimo: o FF completo leva $\approx 25$ ms, de modo que a afirmação de \emph{impraticabilidade} para grandes $n$ ainda precisa de evidência em escala maior);
