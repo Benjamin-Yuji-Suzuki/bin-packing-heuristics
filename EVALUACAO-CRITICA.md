@@ -199,8 +199,14 @@ caso) que o experimento não entrega diretamente (resultado negativo na
 pior caso). A defesa mais forte é **reformular a contribuição** em torno
 disso, não tentar fingir que o pior caso foi atingido.
 
-**Antes da avaliação**, a Priorities são:
-1. Reformular a contribuição para refletir o resultado real (gap, não
-   atingimento).
-2. Construir a instância de Johnson et al. (fecha o item 🔴1 e 🔴3).
-3. Medir em n grande (fecha o item 🔴2).
+**Prioridades** antes da avaliação:
+1. ✅ **Feito** — Reformular a contribuição para refletir o resultado real
+   (o gap, não o atingimento). Objetivo geral e Justificativa reescritos.
+2. ✅ **Tentado** — Construir a instância de Johnson et al. Fiz duas buscas:
+   hill climbing aleatório (razão 1,29) e grade estruturada em camadas
+   (razão **1,50**, melhor). **Nenhuma atinge 1,7** — a família canônica é
+   uma construção específica, não um ponto do espaço de busca. O artigo
+   reporta isso como resultado negativo honesto.
+3. ⬜ **Pendente** — Medir em n grande (fecha o item 🔴2). O FF em n=16.000
+   leva 25 ms; seria preciso n na casa de milhões para a
+   "impraticabilidade" ficar evidente.

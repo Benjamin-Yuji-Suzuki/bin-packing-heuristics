@@ -239,6 +239,40 @@ aproximações, não prova que o limite é 1,7 nem que é 1,29.
 
 ---
 
+## 4c. Busca estruturada da pior caso (Johnson) — ~1 s
+
+Complemento do `piorcasa`: em vez de sortear tamanhos, este comando varre
+uma **grade** sobre famílias em camadas — que é onde o pior caso do First Fit
+realmente mora.
+
+```bash
+cargo run --release --bin johnson 4        # m = 4 itens por camada
+cargo run --release --bin johnson 6        # mais itens por camada
+```
+
+**O que ele faz:** testa famílias de 2 e 3 camadas (itens grandes que abrem
+bins, cujo resíduo não comporta o grupo seguinte), depois varre uma grade de
+14.365 pares de tamanhos, e por fim completa o melhor par com uma terceira
+camada. Mede contra o ótimo exato.
+
+**Resultado medido (m = 4):**
+
+```
+Grade fina em 2 camadas: 14.365 pares avaliados
+  melhor razao FF = 1.5000  (garantia 1,7; otimo 2; FF abre 3)
+  instancia: [0.255, 0.24] x4
+```
+
+Isso é **melhor** que a busca aleatória (1,29) — a estrutura em camadas
+importa — mas ainda não atinge 1,7.
+
+**As duas buscas juntas mostram:** nem o sorteio nem a grade em camadas
+reproduzem a família canônica de Johnson et al. (1974). Ela não é um ponto
+do espaço de busca, é uma construção específica. O artigo reporta isso como
+resultado negativo honesto.
+
+---
+
 ## 5. Progresso e ordenação — segundos
 
 ```bash
@@ -313,6 +347,7 @@ duas para a bibliografia. Resultado: 14 páginas, 6 figuras, 5 tabelas.
 | 3 | `bash scripts/bnb.sh` | ~26 s |
 | 4 | `bin-packing-heuristics worstcase` | ~6 s |
 | 4b | `piorcasa` (pior caso + velocidade) | ~30 s |
+| 4c | `johnson` (busca estruturada) | ~1 s |
 | 5 | `progress` / `sorted-vs-unsorted` | ~5 s |
 | 6 | scripts Python dos gráficos | ~20 s |
 | 7 | LaTeX ×4 passadas | ~15 s |
