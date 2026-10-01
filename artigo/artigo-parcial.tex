@@ -224,7 +224,16 @@ As cinco séries quadráticas recuperam $\beta_1 \in [1{,}86;\,1{,}97]$ com $R^2
 
 Distribuições aleatórias quase nunca atingem o pior caso: por construção, elas produzem razões próximas de 1. Para confrontar as garantias de Johnson et al.~\cite{johnson1974} e Dósa~\cite{dosa2007} com o comportamento real, construímos famílias adversariais --- instâncias projetadas para degradar a heurística --- e as medimos contra o \emph{ótimo exato}, obtido por branch-and-bound com podas (implementado no repositório, viável até $n \approx 60$). Isso permite reportar a razão verdadeira $A(I)/\mathrm{OPT}(I)$, e não apenas a conservadora $A(I)/L_2(I)$.
 
-O resultado é instrutivo e merece ser declarado com honestidade: \textbf{nossas famílias adversariais não atingem as garantias teóricas}. Na construção canônica de pior caso do NF (itens alternados $0.5 \pm \varepsilon$), todas as cinco heurísticas acertam o ótimo exato --- razão $1{,}000$. Na família de 3-partição forçada, o NF chega a $1{,}33$ contra o ótimo, ainda muito abaixo da garantia de $2$. A razão é que atingir o pior caso assintótico exige uma construção mais astuta do que estas famílias simples --- escala $\Theta(n)$ com itens em faixas de tamanho específicas, como as de Johnson et al. Concluímos, portanto, que atingir o pior caso published exige a construção teórica exata de Johnson et al.\\ e não geradores simples; reportamos aqui o que conseguimos construir, sem inflar o resultado. Deixamos a busca exaustiva por pior caso mais agressiva, guiada pelo branch-and-bound, como trabalho futuro do 2º bimestre.
+O resultado é instrutivo e merece ser declarado com honestidade: \textbf{nossas famílias adversariais não atingem as garantias teóricas}. Na construção canônica de pior caso do NF (itens alternados $0.5 \pm \varepsilon$), todas as cinco heurísticas acertam o ótimo exato --- razão $1{,}000$. Na família de 3-partição forçada, o NF chega a $1{,}33$ contra o ótimo, ainda muito abaixo da garantia de $2$. A Figura~\ref{fig:piorcaso} apresenta as curvas de razão $A(I)/\mathrm{OPT}(I)$ ao longo de $n$ para as quatro famílias, com as linhas de referência das garantias de $2$ (NF) e $11/9 \approx 1{,}222$ (FFD). A inspeção visual é conclusiva: todas as curvas ficam \emph{coladas na unidade}, muito abaixo das linhas de garantia, e apenas o NF se destaca, alcançando no máximo $1{,}35$.
+
+A razão é que atingir o pior caso assintótico exige uma construção mais astuta do que estas famílias simples --- escala $\Theta(n)$ com itens em faixas de tamanho específicas, como as de Johnson et al.~\cite{johnson1974}. Concluímos, portanto, que atingir o pior caso publicado exige a construção teórica exata de Johnson et al. e não geradores simples; reportamos aqui o que conseguimos construir, sem inflar o resultado. Deixamos a busca exaustiva por pior caso mais agressiva, guiada pelo branch-and-bound, como trabalho futuro do 2º bimestre.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{grafico_pior_caso.png}
+\caption{Razão $A(I)/\mathrm{OPT}(I)$ nas famílias adversariais, com \emph{ótimo exato} obtido por branch-and-bound. As linhas tracejadas marcam as garantias teóricas ($2$ para NF, $11/9$ para FFD). As curvas ficam coladas na unidade: as famílias construtoras \emph{não} atingem as garantias --- o pior caso assintótico exige a construção exata de Johnson et al., não um gerador simples. O único algoritmo que se descola é o NF, que chega a $1{,}35$ contra o ótimo.}
+\label{fig:piorcaso}
+\end{figure}
 
 \subsection{Contraexemplo: ordenar pode piorar o First Fit}
 
@@ -234,7 +243,27 @@ O objetivo específico (v) pedia um contraexemplo em que a ordenação prévia -
 Seja $L = [0.34,\, 0.39,\, 0.33,\, 0.28,\, 0.36,\, 0.27]$. O First Fit na ordem original usa $2$ bins, \emph{igual ao ótimo}; o First Fit Decreasing, na ordem decrescente $[0.39, 0.36, 0.34, 0.33, 0.28, 0.27]$, usa $3$ bins. Ordenar, portanto, \emph{custou um bin}.
 \end{quote}
 
-O caso é específico desta instância: na média das distribuições, ordenar melhora o resultado, como mostra a Tabela~\ref{tab:prelim}. Sua relevância é mostrar que a superioridade do FFD é uma garantia de \emph{pior caso sobre a família de instâncias}, não uma dominância instância a instância. O achado está registrado como teste de regressão no repositório.
+O caso é específico desta instância: na média das distribuições, ordenar melhora o resultado, como mostra a Tabela~\ref{tab:prelim}. A Figura~\ref{fig:ordenado} quantifica esse efeito: ordenar a entrada antes de aplicar NF, FF ou BF reduz consistentemente o número de bins, com economia \emph{independente de $n$} em termos relativos --- o NF gana $4{,}9\%$, o FF $2{,}3\%$ e o BF $2{,}3\%$ do total de bins, valores estáveis nas três escalas medidas ($1.000$, $4.000$ e $16.000$). Para FFD e BFD a ordenação é \emph{redundante}: eles já ordenam por definição, e a economia medida é exatamente zero, como esperado. O custo temporal da ordenação é da mesma ordem do ganho: de $-30\%$ a $+15\%$ no tempo de execução, sem sinal constante --- parte do efeito é ruído de medição, e o restante é o trabalho extra de ordenar compensado por menos itens a percorrer nos laços internos. Sua relevância é mostrar que a superioridade do FFD é uma garantia de \emph{pior caso sobre a família de instâncias}, não uma dominância instância a instância. O achado está registrado como teste de regressão no repositório.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{grafico_ordenado_desordenado.png}
+\caption{Efeito de ordenar a entrada, medido sobre a distribuição 3-partição (10 repetições por ponto). \textbf{Esquerda:} bins economizados ao ordenar (desordenado $-$ ordenado); valores positivos indicam que ordenar ajudou. \textbf{Direita:} variação percentual do tempo de execução causada pela ordenação. Para FFD e BFD a economia é exatamente zero, pois a ordenação é parte da definição do algoritmo --- as barras respective ficam na linha zero.}
+\label{fig:ordenado}
+\end{figure}
+
+\subsection{Progresso: como a heurística avança item a item}
+
+Para tornar explícito \emph{como} cada heurística progride --- e não apenas quantos bins termina usando --- rastreamos a execução item a item, registrando quantos bins estão abertos após cada item. A Figura~\ref{fig:progresso} mostra essa curva para as cinco heurísticas nas quatro distribuições.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{grafico_progresso.png}
+\caption{Bins abertos em função dos itens já processados ($n = 200$), para as cinco heurísticas e as quatro distribuições. As curvas são monótonas não-decrescentes por construção. O NF cresce mais rápido e termina acima das demais, reflexo direto de sua razão de aproximação superior. As curvas do FFD e do BFD coincidem exatamente nestas distribuições: ambos produzem o mesmo \emph{número} de bins, diferindo apenas em \emph{qual} bin cada item ocupa --- por isso tracé-las com estilos distintos.}
+\label{fig:progresso}
+\end{figure}
+
+A leitura do gráfico confirma visualmente o que a Tabela~\ref{tab:prelim} mostra numericamente, e acrescenta um detalhe que a tabela de totais não revela. O NF está acima do FF e do BF em \emph{todos} os 200 itens das quatro distribuições --- a diferença entre eles não é umviés do fim da execução, mas se acumula desde o início. Já o NF \emph{começa abaixo} do FFD e só o ultrapassa entre 77\% e 83\% da execução, conforme a distribuição: como o FFD ordena antes de empacotar, ele \emph{concentra} os bins desde os primeiros itens --- nos primeiros 70\% da execução as duas curvas praticamente coincidem ---, enquanto o NF os distribui de forma mais uniforme ao longo de toda a lista. Isso mostra que os dois algoritmos têm perfis de execução qualitativamente distintos, e não apenas um ``melhor'' e um ``pior'': o mesmo total de bins pode ser atingido por caminhos muito diferentes.
 
 Três observações antecipam a discussão da versão final. Primeira: as razões empíricas ficam drasticamente abaixo das garantias --- FFD média 1.001 em instâncias uniformes, contra a garantia 1.222; mesmo no pior cenário medido (3-partição), nenhuma heurística passou de 1.24. Segunda: a 3-partição é consistentemente a distribuição mais difícil, confirmando que a ausência de itens pequenos é o fator dominante de dificuldade. Terceira: o custo temporal separa os algoritmos muito mais que a qualidade --- em $n=16.000$ e na série \textit{bins-only} da Tabela~\ref{tab:prelim}, o NF é $706\times$ mais rápido que o FF e $1.073\times$ mais rápido que o BFD, com razão de qualidade apenas 30\% pior. Esses múltiplos são calculados \emph{dentro de uma única série experimental}; medi-los cruzando a série com rastreio de atribuição (usada no experimento principal) e a série \textit{bins-only} (usada no benchmark entre linguagens) produziria uma razão artificialmente pequena, pois as duas séries executam quantidades diferentes de trabalho por item.
 

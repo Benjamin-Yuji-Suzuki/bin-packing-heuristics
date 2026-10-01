@@ -46,6 +46,33 @@ progresso.
 decrescente, medindo bins e tempo: mostra o que a ordenação realmente
 muda (e que, para FFD/BFD, não muda nada — eles já ordenam).
 
+### Gráficos
+
+```bash
+cargo run --release --bin exporta_graficos        # gera os 3 CSVs de dados
+/usr/bin/python3 scripts/graficos_novos.py        # gera os 3 gráficos
+/usr/bin/python3 scripts/graficos.py              # gera os 3 gráficos antigos
+```
+
+**Atenção ao interpretador:** use `/usr/bin/python3` (matplotlib 3.6.3).
+O `python3` do PATH (Hermes 3.14) **não tem matplotlib** e falha.
+
+| Gráfico | O que mostra |
+|---|---|
+| `grafico_progresso.png` | bins abertos × item processado, 5 heurísticas × 4 distribuições |
+| `grafico_ordenado_desordenado.png` | bins e tempo: ordenar × não ordenar |
+| `grafico_pior_caso.png` | razão contra o **ótimo exato** nas famílias adversariais |
+| `grafico_tempo_n.png` | tempo × n em log-log (expoentes) |
+| `grafico_razao_distribuicao.png` | razão A(I)/L2(I) por distribuição |
+| `grafico_razao_3particao.png` | razão × n no caso 3-partição |
+| `grafico_linguagens.png` | Rust × C × C++ × Python |
+
+Detalhe de leitura do `grafico_progresso.png`: **as curvas do FFD e do BFD
+coincidem exatamente** nas quatro distribuições — ambos abrem o mesmo
+*número* de bins (diferem só em *qual* bin cada item ocupa). Por isso são
+traçadas com estilos de linha distintos; sem isso uma fica escondida sob
+a outra.
+
 Distribuições disponíveis (`cargo run -- dists`): `uniforme_continua`,
 `uniforme_discreta_100`, `tres_particao`, `falkenauer_u120`.
 
