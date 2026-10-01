@@ -32,3 +32,6 @@ __pycache__/
 # binarios compilados do bench (recompilar com -O3 -march=native)
 bench/bnb_c
 bench/bnb_cpp
+# rodadas de benchmark contaminadas (load 3.4-4.7, Hermes desktop ~49% CPU).
+# Descartadas: re-medir com scripts/rebench.sh em maquina ociosa.
+/bench/runs/
