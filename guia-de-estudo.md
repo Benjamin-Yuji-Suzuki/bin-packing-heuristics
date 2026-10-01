@@ -874,16 +874,25 @@ Se perguntar, lê direto da tabela do artigo (§7):
 
 | Ferramenta | O que fez | O que eu fiz |
 |---|---|---|
-| **Hermes Agent** (Longcat-2.0) | Estruturou projeto, implementou código (Rust + bench C/C++/Python), rodou 1.000 experimentos, gerou gráficos, redigiu 1ª versão do texto | Escolheu/validou tema; descartou rodada contaminada; revisou texto; verificou testes; leu referências |
+| **Hermes Agent** (agente autônomo; modelos `longcat-2.0:free` e `space-bunny-alpha`) | **Implementou** todo o código Rust (heurísticas, L2, gerador, CLI, testes) **e o solver exato branch-and-bound**, mais as versões C/C++/Python do benchmark e do B&B. **Rodou** as 1.000 experimentos e o benchmark multi-linguagem. **Auditou** todos os números contra os CSVs e achou 3 erros no texto (2 múltiplos de velocidade + 1 contagem) e 1 defeito no solver. **Redigiu** artigo, guia e matriz. | Escolhi/validei o tema; descartei a rodada contaminada; **corrigi os números que a auditoria achou, conferindo cada um no dado bruto**; revisei o texto; verifiquei os testes; verifiquei as referências |
 | **Claude Sonnet 4.6** (Thinking) | Revisão acadêmica: avaliou clareza, coesão, metodologia, formato SBC, 16 refs; gerou relatório; aplicou correções aprovadas | Selecionei e aprovei cada modificação individualmente antes da edição |
 | **Gemini 3.1 Pro** (High) | Revisão de estilo (elevou coesão/tom); adição das Considerações Parciais; formatação de LaTeX avançado (`tabularx`) para a página 10; compilação do `.pdf` via terminal | Analisei feedback crítico, exigi a quebra do texto em 10 páginas para encaixar nas regras da SBC, e validei a nova tabela acadêmica |
 
-**Declaração oral (30s):** *"Três ferramentas de IA contribuíram: Hermes Agent implementou
-código e texto, Claude Sonnet revisou academicamente, e Gemini revisou estilo e formalidade.
-A contribuição total é estimada em ~101% — a execução foi quase toda da IA, mas a
-autoria intelectual, a direção e a revisão final são minhas. Nenhum arquivo foi alterado
-sem minha aprovação prévia."*
+**Declaração oral (30s):** *"Três ferramentas de IA contribuíram. O Hermes Agent — um agente
+autônomo, que eu dirigi por diálogo — implementou todo o código, executou os experimentos e
+redigiu a primeira versão do texto; vale destacar que ele também auditou os próprios números
+e encontrou erros que eu corrigi antes da entrega. O Claude Sonnet fez a revisão acadêmica e o
+Gemini a revisão de estilo. A contribuição total é estimada em ~101%: a execução foi quase toda
+da IA, mas o tema, o desenho experimental, a validação e a decisão de descartar resultados
+contaminados são meus."*
+
+**Se perguntarem "como você sabe que os números estão certos?"** — essa é a pergunta que
+separa um trabalho de um trabalho auditado. Resposta curta: *"Eu não confiei no texto. Cada
+número foi reconferido contra o arquivo CSV bruto que o experimento gerou, e a auditoria
+encontrou três erros materiais que eu tinha publicado — inclusive dois multiplicadores de
+velocidade que cruzavam séries experimentais diferentes, o que inflava o número. Os quatro
+erros foram corrigidos antes da entrega."*
 
 ---
 
-*Guia gerado em 24/09/2026 como material de estudo para a defesa. Atualizado com as correções do Gemini 3.1 Pro (estilo), Claude Sonnet 4.6 (acadêmica) e Claude Opus 4.6 Thinking (expansão do glossário, seção 14 de algoritmos passo a passo, e correções ortográficas). Fontes: o próprio artigo (artigo-parcial.tex), o código do repositório e as verificações bibliográficas (Crossref/arXiv/DBLP) feitas durante o projeto.*
+*Guia gerado em 24/09/2026 como material de estudo para a defesa; atualizado em 01/10/2026 com a auditoria numérica (3 erros de número corrigidos no artigo), os novos experimentos de pior caso/progresso/ordenação e o benchmark do branch-and-bound entre linguagens. Atualizado com as correções do Gemini 3.1 Pro (estilo), Claude Sonnet 4.6 (acadêmica) e Claude Opus 4.6 Thinking (expansão do glossário, seção 14 de algoritmos passo a passo, e correções ortográficas). Fontes: o próprio artigo (artigo-parcial.tex), o código do repositório e as verificações bibliográficas (Crossref/arXiv/DBLP) feitas durante o projeto.*

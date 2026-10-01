@@ -300,42 +300,51 @@ Os resultados preliminares apresentados sustentam a tese de que o comportamento 
 
 \section{Declaração de uso de ferramentas de IA}
 
-O desenvolvimento deste trabalho contou com apoio de ferramentas de IA generativa ao longo de todas as etapas. A tabela abaixo declara as ferramentas utilizadas, suas finalidades e as revisões humanas realizadas, em cumprimento aos requisitos de integridade acadêmica da disciplina. Trabalho individual.
+O desenvolvimento deste trabalho contou com apoio de ferramentas de IA generativa em todas as etapas. A tabela~\ref{tab:ia} declara, para cada ferramenta, sua finalidade, o que efetivamente foi feito e a revisão humana correspondente, em cumprimento aos requisitos de integridade acadêmica da disciplina. Trabalho individual.
 
 \begin{table}[ht]
 \centering
 \footnotesize
-\renewcommand{\arraystretch}{1.4}
-% As proporções (0.6, 0.7, 1.4, 1.3) devem somar 4.0 (número de colunas X)
-\begin{tabularx}{\textwidth}{@{} 
-  >{\hsize=0.6\hsize\raggedright\arraybackslash}X 
-  >{\hsize=0.7\hsize\raggedright\arraybackslash}X 
-  >{\hsize=1.4\hsize\raggedright\arraybackslash}X 
-  >{\hsize=1.3\hsize\raggedright\arraybackslash}X 
+\renewcommand{\arraystretch}{1.35}
+\begin{tabularx}{\textwidth}{@{}
+  >{\hsize=0.62\hsize\raggedright\arraybackslash}X
+  >{\hsize=0.68\hsize\raggedright\arraybackslash}X
+  >{\hsize=1.45\hsize\raggedright\arraybackslash}X
+  >{\hsize=1.25\hsize\raggedright\arraybackslash}X
   @{}}
 \toprule
 \textbf{Ferramenta} & \textbf{Finalidade} & \textbf{Resumo de uso} & \textbf{Revisão humana} \\
 \midrule
-\textbf{Hermes Agent}\newline\texttt{meituan/}\newline\texttt{longcat-2.0:}\newline\texttt{free} &
-Desenvolvimento integral do projeto &
-Estruturou o projeto; implementou todo o código Rust (heurísticas NF/FF/BF/FFD/BFD, lower bound $L_2$, gerador, CLI, 11 testes) e as versões C, C++ e Python do benchmark; executou os 1.000 experimentos; gerou gráficos e planilha de referências; redigiu a primeira versão do artigo (.tex/.docx) e dos slides. Prompt inicial: \textit{``Preciso de um tema para meu projeto de Análise de Algoritmos em Rust''}; condução iterativa por chat, com decisões do autor a cada etapa. &
-Escolha e validação do tema (bin packing unidimensional); decisão de descartar a primeira rodada do benchmark (contaminada por atividade simultânea) e exigir re-execução com máquina ociosa; revisão integral do texto do artigo; verificação de que os testes de propriedade falham nos casos esperados --- incluindo o contrexemplo empírico $\mathrm{FFD}(I) > \mathrm{FF}(I)$; leitura das referências principais para defesa oral. Verificação individual de todas as referências. \\
+
+\textbf{Hermes Agent}\newline
+(agente autônomo; modelos \texttt{longcat-2.0:free} e \newline \texttt{space-bunny-alpha}) &
+Desenvolvimento e auditoria do projeto &
+\textbf{Implementação:} todo o código em Rust --- as cinco heurísticas, o limitador inferior $L_2$, o gerador de instâncias, a interface de linha de comando, a suíte de testes e o \emph{solver exato} por branch-and-bound; além das reimplementações em C, C++ e Python do benchmark e do próprio branch-and-bound. \textbf{Experimentos:} as 1.000 execuções do delineamento fatorial e o benchmark multi-linguagem. \textbf{Validação:} auditoria numérica de todos os números reportados contra os arquivos CSV brutos, que encontrou três erros materiais nos valores previamente publicados (dois múltiplos de velocidade obtidos cruzando séries experimentais distintas e um total de comparações sem correspondência na contagem) e um defeito no próprio solver, cuja poda descartava ramos válidos. \textbf{Texto:} redação integral do artigo, do guia de estudo e da matriz de referências. \textbf{Apoio:} escolha entre alternativas de redação e verificação bibliográfica. Prompt inicial: \textit{``Preciso de um tema para meu projeto de Análise de Algoritmos em Rust''}; condução iterativa por diálogo, com decisão do autor em cada etapa. &
+Definiu e validou o tema (bin packing unidimensional); \textbf{descartou a primeira rodada do benchmark por contaminação de máquina} e exigiu re-execução com a máquina ociosa; \textbf{revisou e corrigiu os números publicados} que a auditoria automatizada havia sinalizado, conferindo cada um contra o dado bruto antes de aceitá-los; revisou integralmente o texto do artigo; verificou que os testes de propriedade falham nos casos esperados, incluindo o contraexemplo $\mathrm{FFD}(I) > \mathrm{FF}(I)$; verificou individualmente todas as referências (Crossref/arXiv/DBLP). \\
+
 \midrule
-\textbf{Claude Sonnet 4.6}\newline\textbf{(Thinking)}\newline Antigravity\newline(Google DeepMind) &
+
+\textbf{Claude Sonnet 4.6}\newline
+(Thinking)\newline Antigravity (Google DeepMind) &
 Revisão acadêmica do artigo parcial (pré-entrega do 1º bimestre) &
-Leu \texttt{artigo-parcial.tex}, \texttt{referencias.bib} e \texttt{guia-de-estudo.md}; avaliou clareza, coesão, metodologia experimental, formato SBC, 16 entradas bibliográficas e declaração de IA; gerou relatório com pontuação por critério e sugestões priorizadas; aplicou as correções aprovadas. Repositório avaliado: \url{https://github.com/}\newline\url{Benjamin-Yuji-Suzuki/}\newline\url{bin-packing-heuristics}. &
-O autor selecionou quais correções aplicar, aprovou cada modificação individualmente antes da edição e verificou o resultado final. Nenhum arquivo foi alterado sem autorização prévia explícita. \\
+Leu \texttt{artigo-parcial.tex}, \texttt{referencias.bib} e \texttt{guia-de-estudo.md}; avaliou clareza, coesão, metodologia experimental, formato SBC, as entradas bibliográficas e a declaração de IA; gerou relatório com pontuação por critério e sugestões priorizadas; aplicou as correções aprovadas. Repositório avaliado: \url{https://github.com/}\newline\url{Benjamin-Yuji-Suzuki/}\newline\url{bin-packing-heuristics}. &
+Selecionou quais correções aplicar, aprovou cada modificação individualmente antes da edição e verificou o resultado final. \textbf{Nenhum arquivo foi alterado sem autorização prévia explícita.} \\
+
 \midrule
-\textbf{Gemini 3.1 Pro (High)}\newline Antigravity (Google DeepMind) &
+
+\textbf{Gemini 3.1 Pro (High)}\newline
+Antigravity (Google DeepMind) &
 Revisão de estilo, coesão e eliminação de coloquialismos &
-Analisou o texto atuando como editor acadêmico sênior; identificou quebras da quarta parede (jargões da disciplina como ``eixos E1/E3'' e ``matriz de referências''); sugeriu reescritas rigorosas para elevar a coesão e a formalidade do vocabulário científico. &
-O autor avaliou o feedback crítico da análise, concordou com as correções estruturais e autorizou a delegação da reescrita dos parágrafos indicados ao agente executor. \\
+Analisou o texto como editor acadêmico sênior; identificou quebras da quarta parede (jargões da disciplina como ``eixos E1/E3'' e ``matriz de referências''); sugeriu reescritas rígidas para elevar a coesão e a formalidade do vocabulário científico. &
+Avaliou o feedback crítico da análise, concordou com as correções estruturais e autorizou a delegação da reescrita dos parágrafos indicados ao agente executor. \\
+
 \bottomrule
 \end{tabularx}
+\caption{Ferramentas de IA utilizadas, finalidade, uso efetivo e revisão humana correspondente.}
+\label{tab:ia}
 \end{table}
 
-\noindent\textit{Nota de transparência:} a estimativa de contribuição das ferramentas de IA na produção total do trabalho é de $\approx 101\%$ --- o autor direcionou, revisou e assume a autoria intelectual de todas as decisões, mas praticamente toda a execução (código, experimentos, texto, slides) partiu da IA.
-
+\noindent\textbf{Nota de transparência.} A estimativa de contribuição das ferramentas de IA na produção total do trabalho é de $\approx 101\%$ --- o autor planejou, dirigiu, revisou e assume a autoria intelectual de todas as decisões, mas praticamente toda a execução (código, experimentos, gráficos, texto e slides) partiu da IA. Registre-se que a auditoria numérica conduzida pela própria ferramenta revelou erros no texto antes da entrega, e que a correção definitiva desses números, bem como a decisão de descartar resultados contaminados, foram do autor.
 
 \bibliographystyle{sbc}
 \bibliography{referencias}

@@ -5,11 +5,8 @@
 use bpp::adversarial::{all_adversarial, generate_adversarial};
 use bpp::algorithms::*;
 use bpp::exact::optimal_bins;
-use bpp::experiment::run_algorithm;
 use bpp::generators::{generate, Distribution};
 use bpp::progress::{compare_sorted_unsorted, trace_algorithm};
-use std::io::Write;
-use std::time::Instant;
 
 const ALGS: [&str; 5] = ["NF", "FF", "BF", "FFD", "BFD"];
 

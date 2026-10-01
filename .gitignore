@@ -18,25 +18,17 @@ target/
 
 # screenshots de conferencia da pagina 1
 artigo/pagina1*.png
-target/
-*.csv.bak
-.aux
-*.aux
-*.log
-*.blg
-*.tmp
-.DS_Store
 
-# backups e scratch
-*.xlsx.bak
-
-# clone aninhado antigo do proprio repo (copia divergente do artigo)
-/bin-packing-heuristics/
-
-# template SBC baixado (o .sty/.bst effective esta em artigo/)
-/template-sbc/
-
-# screenshots de conferencia da pagina 1
-artigo/pagina1*.png
+# python
 __pycache__/
 *.pyc
+
+# instancias geradas e rodadas intermediarias
+/instancias/
+/instancias_bnb/
+/bench/runs/
+*.lock
+.~lock*
+# binarios compilados do bench (recompilar com -O3 -march=native)
+bench/bnb_c
+bench/bnb_cpp
