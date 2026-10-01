@@ -25,8 +25,8 @@ echo "=============================================="
 echo " PRE-FLIGHT: a maquina esta livre para medir?"
 echo "=============================================="
 
-LOAD=$(uptime | awk -F'load average:' '{print $2}' | awk -F, '{gsub(/ /,"",$1); print $1}')
-LOAD5=$(uptime | awk -F'load average:' '{print $2}' | awk -F, '{gsub(/ /,"",$2); print $2}')
+LOAD=$(cut -d' ' -f1 /proc/loadavg)
+LOAD5=$(cut -d' ' -f2 /proc/loadavg)
 echo "  carga (1 min) : $LOAD"
 echo "  carga (5 min) : $LOAD5"
 echo "  threads       : $(nproc)"

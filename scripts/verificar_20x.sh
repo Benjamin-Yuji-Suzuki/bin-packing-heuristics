@@ -30,7 +30,7 @@ echo "=============================================="
 echo " VERIFICACAO DE ROBUSTEZ — ${REPETICOES} repeticoes"
 echo "=============================================="
 /usr/bin/python3 scripts/cpu_instantanea.py 2
-CARGA=$(uptime | awk -F'load average:' '{print $2}' | awk -F, '{gsub(/ /,"",$1); print $1}')
+CARGA=$(cut -d' ' -f1 /proc/loadavg)
 echo "carga (1 min): $CARGA   |   nucleo fixado: cpu${CPU}"
 if awk -v l="$CARGA" 'BEGIN{exit !(l+0 > 1.5)}'; then
     echo "AVISO: carga $CARGA > 1.5. Para numero de tempo, rode com a maquina livre."

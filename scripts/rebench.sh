@@ -25,8 +25,8 @@ TS="taskset -c ${NUCLEO}"
 echo "fixando o benchmark no nucleo ${NUCLEO} (taskset)"
 
 {
-  echo "carga (1 min) no inicio : $(uptime | awk -F'load average:' '{print $2}' | awk -F, '{gsub(/ /,"",$1); print $1}')"
-  echo "carga (5 min) no inicio : $(uptime | awk -F'load average:' '{print $2}' | awk -F, '{gsub(/ /,"",$2); print $2}')"
+  echo "carga (1 min) no inicio : $(cut -d' ' -f1 /proc/loadavg)"
+  echo "carga (5 min) no inicio : $(cut -d' ' -f2 /proc/loadavg)"
   echo "threads                 : $(nproc)"
   echo "nucleo fixado (taskset) : ${NUCLEO}"
   echo "otimizacao              : Rust --release + target-cpu=native; C/C++ -O3 -march=native; CPython 3.12"
