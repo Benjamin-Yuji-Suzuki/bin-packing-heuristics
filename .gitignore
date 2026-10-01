@@ -38,3 +38,8 @@ bench/bnb_cpp
 
 # registro da carga no momento da medicao
 bench/carga_da_medicao.txt
+
+# PDF de referencia (scan, acesso fechado) — nao versionar
+*.pdf
+!artigo/artigo-parcial.pdf
+!guia-de-estudo.pdf
