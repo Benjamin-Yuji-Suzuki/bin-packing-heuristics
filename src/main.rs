@@ -1,7 +1,7 @@
 use bpp::algorithms::{
     best_fit, best_fit_decreasing, first_fit, first_fit_decreasing, lower_bound_l2, next_fit,
 };
-use bpp::experiment::{run_experiment, to_csv, ALGORITHMS};
+use bpp::experiment::{to_csv, ALGORITHMS};
 use bpp::generators::{generate, Distribution};
 use clap::{Parser, Subcommand};
 use std::io::Write;
@@ -51,6 +51,12 @@ enum Command {
         /// Distribuições a incluir (separadas por vírgula); padrão: todas
         #[arg(long, value_delimiter = ',')]
         dists: Vec<String>,
+        /// Salto da semente mestra. Repetir o comando com salts
+        /// diferentes sorteia instâncias DIFERENTES — é o que permite
+        /// medir a variabilidade real do resultado. Padrão 0 = as
+        /// instâncias originais do artigo.
+        #[arg(long, default_value_t = 0)]
+        salt: u64,
     },
     /// Lista as distribuições disponíveis.
     Dists,
@@ -232,6 +238,7 @@ fn main() {
             reps,
             out,
             dists,
+            salt,
         } => {
             let dist_list: Vec<Distribution> = if dists.is_empty() {
                 Distribution::all().to_vec()
@@ -242,7 +249,8 @@ fn main() {
                 "Experimento: sizes={sizes:?} reps={reps} dists={:?}",
                 dist_list.iter().map(|d| d.name()).collect::<Vec<_>>()
             );
-            let results = run_experiment(&sizes, &dist_list, reps);
+            eprintln!("salt da semente: {salt}");
+            let results = bpp::experiment::run_experiment_salt(&sizes, &dist_list, reps, salt);
             let mut f = std::fs::File::create(&out).expect("criar CSV");
             f.write_all(to_csv(&results).as_bytes())
                 .expect("gravar CSV");

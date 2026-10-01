@@ -59,11 +59,28 @@ pub const ALGORITHMS: [&str; 5] = ["NF", "FF", "BF", "FFD", "BFD"];
 /// O lower bound L2 é calculado UMA vez por instância (é o mesmo para
 /// todos os algoritmos).
 pub fn run_experiment(sizes: &[usize], dists: &[Distribution], reps: usize) -> Vec<RunResult> {
+    run_experiment_salt(sizes, dists, reps, 0)
+}
+
+/// Idêntico a `run_experiment`, mas com um SALTO de semente.
+///
+/// Sem o salto, a semente é `1000*(rep+1) + n`, que NÃO depende da
+/// execução: repetir o comando 20 vezes reproduz byte a byte as mesmas
+/// 1.000 instâncias, e a variabilidade medida entre execuções é zero por
+/// construção — o que não diz nada sobre a robustez do resultado.
+/// Com `salt`, cada execução sorteia um conjunto diferente de
+/// instâncias, que é a fonte real de incerteza.
+pub fn run_experiment_salt(
+    sizes: &[usize],
+    dists: &[Distribution],
+    reps: usize,
+    salt: u64,
+) -> Vec<RunResult> {
     let mut results = Vec::new();
     for &dist in dists {
         for &n in sizes {
             for rep in 0..reps {
-                let seed = 1000 * (rep as u64 + 1) + n as u64;
+                let seed = salt.wrapping_add(1000 * (rep as u64 + 1) + n as u64);
                 let items = generate(n, dist, seed);
                 let lb = lower_bound_l2(&items);
                 let total: f64 = items.iter().sum();

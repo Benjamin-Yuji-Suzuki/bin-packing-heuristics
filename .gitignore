@@ -43,3 +43,6 @@ bench/carga_da_medicao.txt
 *.pdf
 !artigo/artigo-parcial.pdf
 !guia-de-estudo.pdf
+
+# resultados da verificacao de robustez 20x
+dados_20x/
