@@ -130,3 +130,54 @@ para separar os grupos.
 6. O número foi lido do arquivo bruto, não de uma transcrição?
 
 Se qualquer resposta for "não", o número não entra no artigo.
+
+---
+
+## 6. Bug no trace de progresso (isto e' logica, nao medicao)
+
+**Sintoma.** O comando `progress` e o campo `size` do CSV exportado
+reportavam o tamanho errado dos itens em **FFD e BFD**. Medido: reportava
+`0,32` onde o item real era `0,97`.
+
+**Causa.** `first_fit_decreasing` chama `first_fit` sobre a lista **ja
+ordenada**:
+
+```rust
+pub fn first_fit_decreasing(items: &[f64]) -> Solution {
+    let mut sorted = items.to_vec();
+    sorted.sort_by(|a, b| b.partial_cmp(a).unwrap());
+    first_fit(&sorted)   // a assignment e' indexada por `sorted`
+}
+```
+
+Mas `trace_from_solution` recebia a lista **original** e lia `items[i]`. Em
+FFD, `items[i]` nao e' o item que caiu naquele passo.
+
+**Por que passou despercebido.** O campo `bins_open` -- que e' o que o grafico
+usa -- continua **correto**, porque sai do maximo da atribuicao e nao do
+tamanho. So o campo `size` estava trocado, e nada no artigo depende dele. Um
+teste que verificasse so o grafico passaria.
+
+**Correcao.** `trace_algorithm` monta a lista na ordem realmente processada
+(decrescente para FFD/BFD) e passa essa lista ao trace. `item_index` virou
+`step` -- e' posicao na ordem de execucao, nao indice na entrada.
+
+**Licao.** Um campo de saida correto nao valida os outros. Conferir campo a
+campo contra a verdade, e nao "a saida parece razoavel".
+
+---
+
+## Checklist de auditoria de codigo
+
+1. **L2 <= OPT** em amostra ampla -- L2 e' o denominador de toda razao do
+   artigo. Medido: 0 violacoes em 4.800 instancias. E a razao A/L2 supera
+   A/OPT em **0,15% a 4,7%**: a afirmacao de que o relatorio e' conservador
+   se sustenta.
+2. **B&B confere com busca exata sem podas** -- se as podas voltarem a errar,
+   os dois divergem. Medido: 0 divergencias em 600 instancias.
+3. **Solucoes viaveis** -- nenhum residuo de bin fora de [0,1]. 4.000 checagens.
+4. **Determinismo do gerador** -- mesma semente, mesma instancia. 4/4.
+5. **Casos degenerados a mao** -- `[]`, `[1.0]`, `[0.5;4]`, itens minusculos
+   (divisao por zero na razao).
+
+Os cinco viraram testes permanentes: `cargo test`, 25 testes.
