@@ -1,64 +1,73 @@
 #!/usr/bin/env bash
-# Pre-flight: só roda o benchmark se a máquina estiver de fato ociosa.
+# Pre-flight: so roda o benchmark se a maquina estiver de fato livre.
 #
-# Motivo: um benchmark medido com a CPU ocupada não reproduz. Medimos
+# Motivo: benchmark medido com a CPU ocupada nao reproduz. Medimos
 # desvios de ate 6,7% entre rodadas contaminadas e limpas — suficiente
 # para distorcer um multiplo como rust/C, que e o numero reportado.
 #
-# Criterio: load average de 1 minuto abaixo de LIMITE_CARGA E nenhum
-# processo consumindo mais de PCT_MAX fora do proprio benchmark.
+# Criterio: uso INSTANTANEO total do sistema (scripts/cpu_instantanea.py)
+# abaixo de PCT_MAX.
 #
-# Uso: bash scripts/preflight.sh [--forcar]
+# NAO usamos `ps pcpu` aqui: ele e a media de uso desde o inicio do
+# processo. Um aplicativo aberto ha 23h marca ~30% mesmo estando parado.
+# Para benchmark so interessa o uso agora, medido por deltas de
+# /proc/<pid>/stat.
+#
+# Uso: bash scripts/preflight.sh
 set -uo pipefail
+cd "$(dirname "$0")/.."
 
-LIMITE_CARGA="${LIMITE_CARGA:-1.0}"
-PCT_MAX="${PCT_MAX:-20}"
-FORCAR=0
-[ "${1:-}" = "--forcar" ] && FORCAR=1
+PCT_MAX="${PCT_MAX:-25}"   # % de uso instantaneo do sistema aceito
+NUCLEO="${NUCLEO:-0}"     # nucleo onde o benchmark sera fixado (P-core!)
+JANELA="${JANELA:-2}"     # janela de medicao, em segundos
 
 echo "=============================================="
-echo " PRE-FLIGHT: verificando se a maquina esta idle"
+echo " PRE-FLIGHT: a maquina esta livre para medir?"
 echo "=============================================="
 
 LOAD=$(uptime | awk -F'load average:' '{print $2}' | awk -F, '{gsub(/ /,"",$1); print $1}')
-THREADS=$(nproc)
+LOAD5=$(uptime | awk -F'load average:' '{print $2}' | awk -F, '{gsub(/ /,"",$2); print $2}')
 echo "  carga (1 min) : $LOAD"
-echo "  threads       : $THREADS"
+echo "  carga (5 min) : $LOAD5"
+echo "  threads       : $(nproc)"
 free -h | awk '/^Mem:/{print "  RAM livre     : "$7}'
 GPU=$(nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader 2>/dev/null | head -1 | tr -dc '0-9')
-echo "  GPU           : ${GPU:-?}% (irrelevante: benchmark e CPU-only)"
+echo "  GPU           : ${GPU:-?}%  (irrelevante: o benchmark e CPU-only, single-threaded)"
 
 echo
-echo "  Processos acima de ${PCT_MAX}% de CPU:"
-TOPO=$(ps -eo pcpu,comm --sort=-pcpu --no-headers | head -6)
-echo "$TOPO" | awk -v p="$PCT_MAX" '{ if ($1+0 > p) printf "    >>> %s%%  %s\n", $1, $2; else printf "        %s%%  %s\n", $1, $2 }'
+echo "  Uso INSTANTANEO de CPU (janela de ${JANELA}s):"
+INST=$(/usr/bin/python3 scripts/cpu_instantanea.py "$JANELA" 2>/dev/null)
+echo "$INST" | sed 's/^/    /'
+SISTEMA=$(echo "$INST" | grep -oP 'uso total do sistema: \K[0-9.]+')
+SISTEMA="${SISTEMA:-100}"
 
-CONTAM=$(ps -eo pcpu,comm --no-headers | awk -v p="$PCT_MAX" '$1+0 > p' | wc -l)
-CARGA_ALTA=$(awk -v l="$LOAD" -v lim="$LIMITE_CARGA" 'BEGIN{print (l+0 > lim+0) ? 1 : 0}')
+echo
+# AVISO E-CORE: i5-13420H tem 4 P-cores (cpu0-7, hyperthread) e
+# 4 E-cores (cpu8-11). Um E-core e ~2x mais LENTO — benchmark fixado
+# num deles infla todos os tempos e invalida a comparacao com a
+# tabela publicada.
+if [ "$NUCLEO" -ge 8 ] 2>/dev/null; then
+    echo " PERIGO: cpu${NUCLEO} e um E-CORE (cpu8-11), ~2x mais lento."
+    echo " Os tempos serao ~2x maiores e NAO comparaveis com a tabela."
+    echo " Use NUCLEO=0 (P-core)."
+    echo "=============================================="
+    exit 1
+fi
+echo "  nucleo escolhido: cpu${NUCLEO} (P-core, ok)"
 
 echo
 echo "=============================================="
-if [ "$CONTAM" -eq 0 ] && [ "$CARGA_ALTA" -eq 0 ]; then
-    echo " OK: maquina ociosa (carga $LOAD <= $LIMITE_CARGA)."
-    echo " Pode rodar o benchmark."
+if awk -v s="$SISTEMA" -v lim="$PCT_MAX" 'BEGIN{exit !(s+0 <= lim+0)}'; then
+    echo " OK: sistema usando ${SISTEMA}% de ${PCT_MAX}% permitido."
+    echo " O benchmark sera fixado no nucleo ${NUCLEO} (taskset)."
     echo "=============================================="
     exit 0
 fi
 
-echo " CONTAMINADA — benchmark NAO deve rodar:"
-[ "$CARGA_ALTA" -eq 1 ]   && echo "   - carga $LOAD acima do limite $LIMITE_CARGA"
-[ "$CONTAM" -gt 0 ]       && echo "   - $CONTAM processo(s) acima de ${PCT_MAX}% de CPU"
+echo " OCUPADO: sistema usando ${SISTEMA}% (limite ${PCT_MAX}%)."
+echo " Quem esta usando agora:"
+echo "$INST" | grep -E '^ +[0-9]' | sed 's/^/  /'
 echo
-echo " Feche o que estiver em uso (Discord, Firefox, abas) e rode de novo."
-echo " NOTA: o Hermes desktop ocupa ~48% da CPU e NAO pode ser fechado"
-echo "       (e o processo que executa este script). Se o resto for"
-echo "       zerado, a carga residual dele ainda barra o pre-flight —"
-echo "       nesse caso use LIMITE_CARGA=1.5 bash scripts/rebench.sh"
-echo "       e registre a carga real no artigo."
-if [ "$FORCAR" -eq 1 ]; then
-    echo
-    echo " --forcar: rodando mesmo assim, por decisão explícita."
-    exit 0
-fi
+echo " Feche o que estiver em uso e rode de novo."
 echo "=============================================="
 exit 1

@@ -24,12 +24,20 @@ def carregar(path):
 
 def main():
     base = "bench/runs"
+    # Descobre as rodadas a partir dos arquivos de UMA linguagem. Um glob
+    # "*_1.csv" casaria tambem com c_1, cpp_1, python_1 e rust_1 — foi
+    # exatamente isso que produziu "rodadas: [1,1,1,1]" e misturou as
+    # linguagens na mediana.
+    langs = ["rust", "c", "cpp", "python"]
+    langs = [l for l in langs if os.path.exists(f"{base}/{l}_1.csv")]
+    if not langs:
+        raise SystemExit(f"nenhum CSV em {base} — rode scripts/rebench.sh")
     rodadas = sorted(
         int(p.rsplit("_", 1)[1].replace(".csv", ""))
-        for p in glob.glob(f"{base}/*_1.csv")
+        for p in glob.glob(f"{base}/{langs[0]}_*.csv")
     )
-    langs = ["rust", "c", "cpp", "python"]
-    print(f"rodadas encontradas: {rodadas}\n")
+    print(f"linguagens: {langs}")
+    print(f"rodadas:    {rodadas}\n")
 
     dados = {}  # (lang, rodada) -> lista de dicts
     for lang in langs:

@@ -16,8 +16,21 @@ if ! bash scripts/preflight.sh; then
     exit 1
 fi
 echo
-CARGA_REAL=$(uptime | awk -F'load average:' '{print $2}' | awk -F, '{gsub(/ /,"",$1); print $1}')
-echo "carga no inicio da medicao: $CARGA_REAL" | tee bench/carga_da_medicao.txt
+# Fixa o benchmark num nucleo: com 12 threads e o sistema em ~19% de uso,
+# o agendador poderia migrar o processo para um nucleo ocupado e introducir
+# ruido. Fixar torna a medicao estavel e REPRODUZIVEL, e o nucleo usado
+# fica declarado no artigo.
+NUCLEO="${NUCLEO:-0}"
+TS="taskset -c ${NUCLEO}"
+echo "fixando o benchmark no nucleo ${NUCLEO} (taskset)"
+
+{
+  echo "carga (1 min) no inicio : $(uptime | awk -F'load average:' '{print $2}' | awk -F, '{gsub(/ /,"",$1); print $1}')"
+  echo "carga (5 min) no inicio : $(uptime | awk -F'load average:' '{print $2}' | awk -F, '{gsub(/ /,"",$2); print $2}')"
+  echo "threads                 : $(nproc)"
+  echo "nucleo fixado (taskset) : ${NUCLEO}"
+  echo "otimizacao              : Rust --release + target-cpu=native; C/C++ -O3 -march=native; CPython 3.12"
+} | tee bench/carga_da_medicao.txt
 
 echo "==> 1/5 exportando instâncias (200 arquivos .f64)"
 ./target/release/bin-packing-heuristics export --sizes 1000,2000,4000,8000,16000 --reps 10 --out instancias
@@ -31,11 +44,11 @@ echo "    compilado."
 mkdir -p bench/runs
 for rodada in 1 2 3; do
   echo "==> 3/5 rodada $rodada/3 — Rust"
-  ./target/release/bin-packing-heuristics bench --dir instancias --out "bench/runs/rust_$rodada.csv" 2>&1 | tail -1
+  $TS ./target/release/bin-packing-heuristics bench --dir instancias --out "bench/runs/rust_$rodada.csv" 2>&1 | tail -1
   echo "==> 4/5 rodada $rodada/3 — C / C++ / Python"
-  ./bench/bench_c   instancias "bench/runs/c_$rodada.csv"    2>&1 | tail -1
-  ./bench/bench_cpp instancias "bench/runs/cpp_$rodada.csv"  2>&1 | tail -1
-  /usr/bin/python3 bench/bench.py    instancias "bench/runs/python_$rodada.csv" 2>&1 | tail -1
+  $TS ./bench/bench_c   instancias "bench/runs/c_$rodada.csv"    2>&1 | tail -1
+  $TS ./bench/bench_cpp instancias "bench/runs/cpp_$rodada.csv"  2>&1 | tail -1
+  $TS /usr/bin/python3 bench/bench.py    instancias "bench/runs/python_$rodada.csv" 2>&1 | tail -1
 done
 
 echo "==> 5/5 consolidando (mediana de 3 execuções)"

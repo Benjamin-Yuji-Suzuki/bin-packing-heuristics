@@ -20,6 +20,10 @@ if ! bash scripts/preflight.sh; then
 fi
 echo
 
+NUCLEO="${NUCLEO:-0}"
+TS="taskset -c ${NUCLEO}"
+echo "fixando o branch-and-bound no nucleo ${NUCLEO} (taskset)"
+
 N_MAX="${1:-20}"
 REP="${2:-10}"
 
@@ -35,13 +39,13 @@ echo "    ok"
 
 mkdir -p bench/runs
 echo "==> Rust"
-./target/release/bnb_rust instancias_bnb bench/runs/bnb_rust.csv "$N_MAX" 2>&1 | tail -1
+$TS ./target/release/bnb_rust instancias_bnb bench/runs/bnb_rust.csv "$N_MAX" 2>&1 | tail -1
 echo "==> C"
-./bench/bnb_c   instancias_bnb bench/runs/bnb_c.csv   "$N_MAX" 2>&1 | tail -1
+$TS ./bench/bnb_c   instancias_bnb bench/runs/bnb_c.csv   "$N_MAX" 2>&1 | tail -1
 echo "==> C++"
-./bench/bnb_cpp instancias_bnb bench/runs/bnb_cpp.csv "$N_MAX" 2>&1 | tail -1
+$TS ./bench/bnb_cpp instancias_bnb bench/runs/bnb_cpp.csv "$N_MAX" 2>&1 | tail -1
 echo "==> Python (o mais lento — patience)"
-/usr/bin/python3 bench/bnb.py instancias_bnb bench/runs/bnb_py.csv "$N_MAX" 2>&1 | tail -1
+$TS /usr/bin/python3 bench/bnb.py instancias_bnb bench/runs/bnb_py.csv "$N_MAX" 2>&1 | tail -1
 
 echo "==> consolidando"
 /usr/bin/python3 scripts/consolida_bnb.py
