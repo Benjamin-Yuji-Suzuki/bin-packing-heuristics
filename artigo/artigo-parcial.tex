@@ -348,7 +348,7 @@ Registramos este resultado negativo com a mesma visibilidade dos positivos. A le
 Como parte do rigor, registramos como os resultados foram validados:
 
 \begin{itemize}[nosep]
-  \item \textbf{Identidade de soluções:} as quatro linguagens de implementação produzem \emph{exatamente} o mesmo número de bins em $100\%$ das $1.000$ execuções comparadas --- as diferenças são exclusivamente de tempo.
+  \item \textbf{Identidade de soluções entre linguagens e entre rodadas:} as quatro linguagens de implementação (Rust, C, C++, Python) produzem \emph{exatamente} o mesmo número de bins em $100\%$ das $1.000$ execuções comparadas --- as diferenças são exclusivamente de tempo. Verificamos também que, dentro de cada linguagem, as três rodadas do protocolo produzem bins idênticos entre si, como esperado: a entrada é a mesma, logo a saída determinística é a mesma.
   \item \textbf{Reprodutibilidade:} duas medições independentes do benchmark multi-linguagem, em condições controladas, concordam com desvio mediano de $1{,}2\%$ no tempo.
   \item \textbf{Validação do limitador:} o solver exato por \emph{branch-and-bound} foi conferido contra uma busca exata sem podas em $600$ instâncias, sem divergência, e o limitador $L_2$ foi verificado como não-superando o ótimo exato em $4.800$ instâncias.
   \item \textbf{Testes automatizados:} a suíte do repositório inclui $28$ testes cobrindo viabilidade, determinismo, garantias e casos degenerados.

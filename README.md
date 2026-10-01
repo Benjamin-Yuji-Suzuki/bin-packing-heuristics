@@ -187,6 +187,30 @@ a distinção O-grande × realidade do eixo E1.
 - Bentley et al. 1983 (Allerton) — o estudo experimental que inspirou os teoremas
   de 1984; precedente do desenho metodológico deste projeto
 
+## Verificação de robustez
+
+O projeto tem quatro testes de reprodutibilidade, todos executáveis:
+
+```bash
+bash scripts/verificar_determinismo.sh 20    # cada comando 20x — determinismo
+bash scripts/verificar_20x.sh 16000          # experimento 20x — variabilidade
+bash scripts/verificar_pdf_20x.sh            # artigo 20x — rigidez do PDF
+bash scripts/bnb.sh                           # B&B nas 4 linguagens
+```
+
+Resultados medidos:
+
+| Teste | O que mede | Resultado |
+|---|---|---|
+| determinismo | mesma entrada → mesma saída | 5/5 comandos idênticos em 20× |
+| experimento | os **números** são estáveis? | CV ≤ 0,19%; 20 números reproduzem em 0,12% |
+| artigo | o **documento** é reproduzível? | 20 PDFs com texto idêntico |
+| identidades | as linguagens concordam? | 0 divergências em 1.000 comparações |
+
+O `--salt` no comando `experiment` é o que torna a variabilidade mensurável:
+sem ele, repetir o comando recriaria as mesmas 1.000 instâncias e a
+variabilidade seria zero por construção.
+
 ## Declaração de uso de IA
 
 | Ferramenta | Finalidade | Resumo de uso | Revisão humana realizada |
