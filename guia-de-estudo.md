@@ -362,7 +362,7 @@ contraexemplos FFD>FF."*
 | FFD | 28.591 | 27.961 | 27.457 | 1.527.636 | 1.02× |
 | BFD | **40.784** | 41.670 | 41.328 | 2.551.558 | 0.98× |
 
-**Leitura:** Rust ganha de C/C++ em NF (1.7× mais rápido) e BF, empata em BFD, fica 2–8%
+**Leitura:** Rust é 1,82× mais rápido que C em NF e 10% mais rápido em BF; empata em FF, FFD e BFD (0,998 / 0,970 / 0,985 — dentro do ruído). Python fica ~14× atrás no linear e ~55–61× nos quadráticos. Medida controlada com taskset num P-core; desvio mediano de 1,2% contra a rodada anterior.
 atrás em FF/FFD (perto do ruído). Python: ~15× atrás no linear, ~53–63× nos quadráticos.
 
 **Como o Rust chegou lá:** a 1ª versão Rust media 1.3–3× o tempo do C. Dois problemas:

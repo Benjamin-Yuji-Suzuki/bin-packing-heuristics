@@ -165,7 +165,7 @@ O experimento já foi executado na íntegra (1.000 execuções). A Tabela~\ref{t
 
 \begin{table}[ht]
 \centering
-\caption{Razão média A(I)/L2(I) por distribuição (esquerda) e tempo mediano ($\mu$s) por linguagem (direita), $n = 16{,}000$, distribuição uniforme discreta; mediana de 3 execuções completas (10 repetições cada), máquina ociosa. Os tempos são medidos nas variantes \textit{bins-only}, isto é, exatamente o mesmo trabalho em todas as linguagens.}
+\caption{Razão média A(I)/L2(I) por distribuição (esquerda) e tempo mediano ($\mu$s) por linguagem (direita), $n = 16{,}000$, distribuição uniforme discreta. Tempos: mediana de 3 execuções completas (10 repetições cada), todas com o processo fixado num \emph{performance core} (\texttt{taskset}) e com a carga do sistema monitorada e registrada. Os tempos são medidos nas variantes \textit{bins-only}, isto é, exatamente o mesmo trabalho em todas as linguagens. A reproduzibilidade foi verificada contra uma medição anterior independente: o desvio mediano entre as duas foi de 1{,}2\%.}
 \label{tab:prelim}
 \footnotesize
 \resizebox{\textwidth}{!}{%
@@ -175,11 +175,11 @@ O experimento já foi executado na íntegra (1.000 execuções). A Tabela~\ref{t
 \cmidrule(lr){2-5} \cmidrule(lr){6-9}
 & U[0,1] & U\{1/100\} & 3-part & Falk & Rust & C & C++ & Python \\
 \hline
-NF  & 1.328 & 1.323 & 1.235 & 1.198 & 38 & 67 & 64 & 559 \\
-FF  & 1.021 & 1.017 & 1.131 & 1.032 & 26.847 & 25.381 & 24.965 & 1.412.408 \\
-BF  & 1.011 & 1.009 & 1.131 & 1.031 & 31.202 & 33.714 & 35.703 & 1.761.366 \\
-FFD & 1.001 & 1.000 & 1.106 & 1.014 & 28.591 & 27.961 & 27.457 & 1.527.636 \\
-BFD & 1.001 & 1.000 & 1.106 & 1.014 & 40.784 & 41.670 & 41.328 & 2.551.558 \\
+NF  & 1.328 & 1.323 & 1.235 & 1.198 & 38 & 70 & 64 & 530 \\
+FF  & 1.021 & 1.017 & 1.131 & 1.032 & 24.889 & 24.929 & 24.768 & 1.369.383 \\
+BF  & 1.011 & 1.009 & 1.131 & 1.031 & 30.988 & 34.090 & 35.653 & 1.743.061 \\
+FFD & 1.001 & 1.000 & 1.106 & 1.014 & 27.148 & 27.987 & 27.298 & 1.483.583 \\
+BFD & 1.001 & 1.000 & 1.106 & 1.014 & 41.308 & 41.934 & 41.877 & 2.538.086 \\
 \hline
 \end{tabular}%
 }
@@ -269,7 +269,7 @@ Três observações antecipam a discussão da versão final. Primeira: as razõe
 
 Essas razões empíricas, além disso, \textbf{validam resultados teóricos clássicos de caso médio}. A razão média do NF na distribuição uniforme contínua (1.328) confirma a razão esperada exata $4/3$ provada por Coffman et al.~\cite{coffman1980} com erro de 0.4\%; as razões do FF/BF (1.01--1.02) e do FFD/BFD (1.00--1.01) confirmam que o FF é assintoticamente ótimo na expectativa e que o FFD tem excesso esperado constante para itens limitados a $1/2$ \cite{bentley1984}; e a dificuldade da 3-partição é prevista pelo critério de simetria em torno de $1/2$, segundo o qual apenas distribuições simétricas garantem desperdício sublinear \cite{bentley1984} --- critério que a distribuição de Falkenauer igualmente viola ($U\{1/10,\ldots,1/2\}$), e cuja razão do FFD (1.014) fica de fato entre a das distribuições simétricas (1.001) e a da 3-partição (1.106), consistente com desperdício linear de constantes distintas. Registre-se, por rigor, que a 3-partição entrou no desenho \textit{porque} a literatura a aponta como difícil: a contribuição aqui é a confirmação controlada, não a descoberta. O desenho experimental desta tradição --- simulações controladas que anteciparam e inspiraram os teoremas de caso médio \cite{bentley1983} --- é o mesmo adotado neste trabalho.
 
- A validação cruzada confirma que as quatro linguagens produzem bins idênticos em 100\% das 1.000 execuções comparadas (4 linguagens × 1.000 execuções, com as chaves \emph{(algoritmo, distribuição, n, repetição)} coincidentes). Rust vence em NF ($1.7\times$ mais rápido que C) e BF, empata tecnicamente em BFD, e fica 2--8\% atrás em FF e FFD --- margem próxima do ruído. Python fica cerca de $15\times$ atrás no linear e $53$--$63\times$ nos quadráticos. Primeiro: linguagens compiladas modernas convergem para patamares equivalentes quando o código utiliza abstrações de custo zero (iteradores sem bounds check, pré-alocação, reduções \textit{branchless} vetorizáveis). Segundo: a constante multiplicativa não é propriedade exclusiva da linguagem --- a primeira versão Rust media $1.3$--$3\times$ o tempo de C; equalizar o trabalho e adotar idiomas vetorizáveis inverteu o placar.
+ A validação cruzada confirma que as quatro linguagens produzem bins idênticos em 100\% das 1.000 execuções comparadas (4 linguagens × 1.000 execuções, com as chaves \emph{(algoritmo, distribuição, n, repetição)} coincidentes). Rust é $1{,}82\times$ mais rápido que C em NF e $10\%$ mais rápido em BF, e \emph{empata} em FF, FFD e BFD (razões $0{,}998$, $0{,}970$ e $0{,}985$, dentro do ruído de medição). Python fica $14\times$ atrás no algoritmo linear e $55$--$61\times$ nos quadráticos. A leitura honesta é que, em tempo de execução, Rust, C e C++ são equivalentes salvo no caso linear, onde Rust se destaca; a afirmação anterior de que Rust ficaria $2$--$8\%$ atrás em FF e FFD não se sustenta sob medição controlada. Primeiro: linguagens compiladas modernas convergem para patamares equivalentes quando o código utiliza abstrações de custo zero (iteradores sem bounds check, pré-alocação, reduções \textit{branchless} vetorizáveis). Segundo: a constante multiplicativa não é propriedade exclusiva da linguagem --- a primeira versão Rust media $1.3$--$3\times$ o tempo de C; equalizar o trabalho e adotar idiomas vetorizáveis inverteu o placar.
 
 \begin{figure}[ht]
 \centering

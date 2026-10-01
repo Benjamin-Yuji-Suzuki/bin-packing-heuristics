@@ -131,23 +131,24 @@ python3 scripts/grafico_linguagens.py
 
 **Validação**: os bins produzidos pelas 4 linguagens são idênticos em
 100% das execuções — só o tempo difere. Números reportados: mediana de
-3 execuções completas (cada uma = 10 repetições por configuração).
+3 execuções completas (cada uma = 10 repetições por configuração), com o
+processo fixado num *performance core* e a carga do sistema registrada.
 
 Resultado (n=16.000, uniforme discreta, mediana de 3 execuções, máquina ociosa):
 
 | Algoritmo | Rust (µs) | C (µs)  | C++ (µs) | Python (µs) | rust/C |
 |-----------|-----------|---------|----------|-------------|--------|
-| NF        | 38        | 67      | 64       | 559         | 0.57×  |
-| FF        | 26.847    | 25.381  | 24.965   | 1.412.408   | 1.06×  |
-| BF        | 31.202    | 33.714  | 35.703   | 1.761.366   | 0.93×  |
-| FFD       | 28.591    | 27.961  | 27.457   | 1.527.636   | 1.02×  |
-| BFD       | 40.784    | 41.670  | 41.328   | 2.551.558   | 0.98×  |
+| NF        | 38        | 70      | 64       | 530         | 0.55×  |
+| FF        | 24.889    | 24.929  | 24.768   | 1.369.383   | 1.00×  |
+| BF        | 30.988    | 34.090  | 35.653   | 1.743.061   | 0.91×  |
+| FFD       | 27.148    | 27.987  | 27.298   | 1.483.583   | 0.97×  |
+| BFD       | 41.308    | 41.934  | 41.877   | 2.538.086   | 0.99×  |
 
-**Rust ganha claramente de C/C++ em NF (1.7× mais rápido) e BF, empata
-em BFD, e fica 2–8% atrás em FF/FFD (margem próxima do ruído)** — com
+**Rust é 1,82× mais rápido que C em NF e 10% mais rápido em BF; empata
+em FF, FFD e BFD** — com
 C/C++ em `-O3 -march=native` e Rust em `target-cpu=native` (fair play:
-mesma configuração de otimização máxima para todos). Python fica ~15×
-atrás no linear e ~53–63× nos quadráticos.
+mesma configuração de otimização máxima para todos). Python fica ~14×
+atrás no linear e ~55–61× nos quadráticos.
 
 Como? Variantes "bins-only" (mesmo trabalho que as outras linguagens,
 sem rastreio de atribuição) + idiomas que o LLVM vetoriza: iteradores
