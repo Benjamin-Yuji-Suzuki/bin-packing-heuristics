@@ -412,23 +412,12 @@ O presente estudo é parcial e tem limitações bem delimitadas:
   \item A escala máxima é $n = 16.000$; a afirmação de vantagem relativa do algoritmo linear cresce com $n$ é medida até essa escala, e não além.
   \item O limitador $L_2$, embora validado como inferior ao ótimo, é estrito: a razão $A(I)/L_2(I)$ é uma estimativa conservadora da qualidade real, superestimando $A(I)/\mathrm{OPT}(I)$ em média entre $0{,}3\%$ e $4{,}9\%$ conforme a distribuição. O desvio máximo observado é bem maior --- até $50\%$ --- mas aparece apenas em instâncias muito pequenas ($n \leq 8$), onde o limitador tem pouquíssimos itens para somar; a superestimação tende a zero quando $n$ cresce, à medida que $L_2$ se aproxima de $\mathrm{OPT}$. Como o experimento principal usa $n \geq 1.000$, o efeito é irrelevante para os resultados relatados.
   \item A análise de comportamento médio cobre quatro distribuições de referência, incluindo o modelo \textit{random-order} de Kenyon~\cite{kenyon1996}; outras famílias de distribuições não foram exploradas.
+  \item Não reproduzimos a instância canônica de pior caso de Johnson et al.~\cite{johnson1974}, que é uma construção específica e não um ponto do espaço de busca que nossas buscas exploram. Consequentemente, não demonstramos que o limite de $1{,}7$ do First Fit é atingível: mostramos que as instâncias por nós geradas não o atingem, o que é resultado mais fraco e não mais forte.
 \end{itemize}
 
 \subsection*{Trabalho futuro}
 
-A Seção~\ref{sec:cronograma} lista os trabalhos futuros e as pendências. Em ordem de importância: (i) reproduzir a construção canônica do pior caso do FF a partir do texto original de Johnson et al.; (ii) estender a escala para $n$ na casa de centenas de milhares, para tornar a afirmação de vantagem relativa quantitativa; (iii) incorporar o experimento \textit{random-order}, que permitiria o diálogo direto com as conjecturas de Kenyon~\cite{kenyon1996} e Hebbar et al.~\cite{hebbar2024}; (iv) completar os experimentos definitivos.
-
-\section{Trabalhos futuros e pendências} \label{sec:cronograma}
-
-\begin{itemize}[nosep]
-  \item Ampliar a escala até $n = 256.000$ (O GMP atual de 16.000 já é rapidíssimo: o FF completo leva $\approx 25$ ms, de modo que a afirmação de \emph{impraticabilidade} para grandes $n$ ainda precisa de evidência em escala maior);
-  \item \textbf{(já feito)} Solver exato por branch-and-bound com validação de viabilidade e conferência contra busca sem podas --- permite razão contra $\mathrm{OPT}$ verdadeiro em $n \leq 60$;
-  \item \textbf{(já feito)} Ajuste da curva empírica de tempo na série \textit{bins-only}: expoentes medidos $\beta_1 \in [1{,}76;\,1{,}98]$ para as séries quadráticas e em torno de $1$ para a linear, com $R^2 \geq 0{,}999$ (Tabela~\ref{tab:expoentes});
-  \item \textbf{(já feito)} Comparação entre linguagens sob fair-play, com todas as versões em otimização máxima e o processo fixado num \emph{performance core};
-  \item \textbf{(feito, resultado negativo)} Famílias adversariais de pior caso: medidas contra o ótimo exato, \emph{não} atingem as garantias teóricas (Seção~\ref{sec:adversarial}); resta construir as instâncias canônicas de Johnson et al.~\cite{johnson1974} para confrontar diretamente o limite de $1{,}7$ do First Fit;
-  \item \textbf{(feito, resultado negativo)} Experimento \textit{random-order}: o Best Fit sob ordem de chegada aleatória fica entre $1{,}009$ e $1{,}131$, abaixo da faixa de Kenyon \cite{kenyon1996} e da conjectura de $1{,}15$. A permutação dos itens quase não altera a razão --- o que a governa é a estrutura de tamanhos, não a sequência de chegada (Seção~\ref{sec:random});
-  \item \textbf{(já feito)} Seções de Resultados e Discussão e de Conclusão, com os gráficos definitivos e a auditoria de afirmações.
-\end{itemize}
+As limitações abaixo delimitam o alcance do que foi demonstrado. Em ordem de importância: (i) reproduzir a construção canônica do pior caso do FF a partir do texto original de Johnson et al.; (ii) estender a escala para $n$ na casa de centenas de milhares, para tornar a afirmação de vantagem relativa quantitativa; (iii) incorporar o experimento \textit{random-order}, que permitiria o diálogo direto com as conjecturas de Kenyon~\cite{kenyon1996} e Hebbar et al.~\cite{hebbar2024}; (iv) completar os experimentos definitivos.
 
 \section{Declaração de uso de ferramentas de IA}
 
