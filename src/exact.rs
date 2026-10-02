@@ -28,8 +28,9 @@ pub fn optimal_bins_budget(items: &[f64], budget_us: u128) -> Option<usize> {
     let start = Instant::now();
     // Incumbente inicial: uma solução gulosa (FFD) é um upper bound.
     let mut melhor = crate::algorithms::first_fit_decreasing(items).bins;
-    // Se a heurística já bateu o lower bound L2, não há nada a provar.
-    if melhor <= crate::algorithms::lower_bound_l2(items) {
+    // Lower bound L2. Se a heurística já bateu, não há nada a provar.
+    let l2 = crate::algorithms::lower_bound_l2(items);
+    if melhor <= l2 {
         return Some(melhor);
     }
 
@@ -90,11 +91,28 @@ fn dfs(
     //
     // NOTA: este lower bound e' FRACO quando os itens sao grandes. Nas
     // familias com itens em (1/4, 1/2] cabem 3 por bin, nao 1; medir
-    // `ceil((r - f) / cap_max)` com `cap_max` = maior item foi testado e
+    // `ceil((r-f)/cap_max)` com `cap_max` = maior item foi testado e
     // REVERTIDO: da um bound ainda mais fraco e devolve valores ACIMA do
     // otimo (medido: 3 onde o otimo e' 2), quebrando
-    // `bnb_bate_com_busca_sem_podas`. O custo das familias grandes e'
-    // intrinseco a este bound, nao um bug de implementacao.
+    // `bnb_bate_com_busca_sem_podas`.
+    //
+    // DIAGNOSTICO DO GARGALO (medido, nao suposto):
+    // a formula `ceil(r - f)` divide a carga pela CAPACIDADE do bin (1.0),
+    // que e' o maximo possivel -- nao ha bound de carga mais forte.
+    // Ja o bound por CONTAGEM (`ceil(itens_restantes / 3)`, valido porque
+    // itens em (1/4, 1/2] cabem 3 por bin) da o MESMO valor: para
+    // `pior_3particao` n=30, carga 9,41 -> 10 e itens 30 -> 10, contra
+    // incumbent FFD = 12. Ou seja, o topo NUNCA e' podado: os dois bounds
+    // ficam abaixo da incumbente.
+    //
+    // Logo o gargalo de `pior_3particao` n >= 30 NAO e' esta poda, e' a
+    // ENUMERACAO: provar que nao existe solucao com 11 bins exige explorar
+    // todos os ramos abaixo disso, e o espaco de estados e' exponencial.
+    // Medido: nao converge nem em 1 h por ponto. Ja se verificou que o FFD
+    // e' o MENOR incumbent entre as cinco heuristicas (12, 15, 19), entao
+    // nao ha ganho a obter trocando a heuristica inicial. Fechar isso
+    // exigiria um bound de Martello-Toth completo (L2 com cortes de alpha
+    // mais agressivos), que e' trabalho de dissertacao -- fora do escopo.
     let r = restante[i];
     let f: f64 = residuos.iter().sum();
     let novos_necessarios = if r > f { ((r - f) - 1e-9).ceil() as usize } else { 0 };
