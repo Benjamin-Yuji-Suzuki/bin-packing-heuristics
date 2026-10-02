@@ -418,10 +418,20 @@ números da Tabela 2 reproduzem dentro de 0,12%.
 | 4b | `piorcasa` (pior caso + velocidade) | ~30 s |
 | 4c | `johnson` (busca estruturada) | ~1 s |
 | 5 | `progress` / `sorted-vs-unsorted` | ~5 s |
-| 6 | scripts Python dos gráficos | ~20 s |
+| 6 | `exporta_graficos` | **~6 min30** (ver nota) |
+| 6b | scripts Python dos gráficos | ~20 s |
 | 7 | LaTeX ×4 passadas | ~15 s |
 
-**Só o passo 2 é demorado.** Os outros 7 dão em ~90 segundos no total.
+**Nota sobre o passo 6.** `exporta_graficos` ficou lento porque o
+branch-and-bound é exponencial nas famílias adversariais maiores:
+`pior_3particao` com n >= 30 não converge nem em 10 minutos. O comando
+dedica 120 s por ponto e, nos três que estouram, **preserva o `opt` já
+gravado no CSV e avisa no stdout**. Se você só quer os gráficos de
+progresso/ordenado e não a figura de pior caso, os outros dois CSV são
+gerados em segundos — só o terceiro bloco (`pior_caso()`) é o lento.
+
+**Dois passos são demorados: o 2 (rebench, ~65 min) e o 6
+(`exporta_graficos`, ~6 min30). Os outros 7 dão em ~90 segundos no total.
 
 ---
 
