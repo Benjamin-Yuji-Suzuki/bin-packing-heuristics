@@ -44,9 +44,17 @@ pub fn optimal_bins_budget(items: &[f64], budget_us: u128) -> Option<usize> {
         restante[i] = restante[i + 1] + itens[i];
     }
 
+    // A busca e' exata APENAS se ela CONVERGIU dentro do orcamento. Se o
+    // tempo estourou, `melhor` continua sendo o incumbent do FFD, e devolver
+    // Some(melhor) seria mentir: o valor seria subotimo apresentado como
+    // otimo. Nesse caso devolvemos None, como o doc promises.
     let mut residuos: Vec<f64> = Vec::with_capacity(n);
-    dfs(&itens, &restante, 0, &mut residuos, &mut melhor, start, budget_us);
-    Some(melhor)
+    let convergiu = dfs(&itens, &restante, 0, &mut residuos, &mut melhor, start, budget_us);
+    if convergiu {
+        Some(melhor)
+    } else {
+        None
+    }
 }
 
 fn dfs(
@@ -57,44 +65,73 @@ fn dfs(
     melhor: &mut usize,
     start: Instant,
     budget_us: u128,
-) {
-    // Poda (1): passou o tempo?
+) -> bool {
+    // Poda (1): passou o tempo? Este e' o unico corte que INCOMPLETA a
+    // busca -- os demais so descartam ramos que nao melhoram a
+    // incumbente. Retornar `false` propaga o estouro ate a raiz.
     if start.elapsed().as_micros() > budget_us {
-        return;
+        return false;
     }
-    // Poda (2): já usamos tantos bins quanto a incumbente.
+    // Poda (2): ja usamos tantos bins quanto a incumbente.
     if residuos.len() >= *melhor {
-        return;
+        return true;
     }
     if i == itens.len() {
         *melhor = residuos.len();
-        return;
+        return true;
     }
 
-    // Poda (3): restam R de carga e os bins abertos têm folga total F.
-    // Se R > F, é preciso abrir pelo menos ceil(R - F) bins novos (cada
-    // bin novo comporta no máximo 1 de carga). Se essa lower bound já
-    // alcançar a incumbente, o ramo não pode melhorar nada.
+    // Poda (3): restam R de carga e os bins abertos tem folga total F.
+    // Se R > F, e' preciso abrir pelo menos ceil(R - F) bins novos (cada
+    // bin novo comporta no maximo 1 de carga). Se essa lower bound ja
+    // alcançar a incumbente, o ramo nao pode melhorar nada.
+    //
+    // NOTA: este lower bound e' FRACO quando os itens sao grandes. Nas
+    // familias com itens em (1/4, 1/2] cabem 3 por bin, nao 1; medir
+    // `ceil((r - f) / cap_max)` com `cap_max` = maior item foi testado e
+    // REVERTIDO: da um bound ainda mais fraco e devolve valores ACIMA do
+    // otimo (medido: 3 onde o otimo e' 2), quebrando
+    // `bnb_bate_com_busca_sem_podas`. O custo das familias grandes e'
+    // intrinseco a este bound, nao um bug de implementacao.
     let r = restante[i];
     let f: f64 = residuos.iter().sum();
     let novos_necessarios = if r > f { ((r - f) - 1e-9).ceil() as usize } else { 0 };
     if residuos.len() + novos_necessarios >= *melhor {
-        return;
+        return true;
     }
 
     let x = itens[i];
-    // Tenta encaixar em bins já abertos (ordem de abertura).
+    // Tenta encaixar em bins ja abertos (ordem de abertura).
+    //
+    // REGRA DE SIMETRIA: dois bins com o MESMO resíduo são
+    // intercambiáveis -- colocar o item no primeiro ou no segundo leva ao
+    // mesmo conjunto de estados. Sem esta regra o DFS reexplora todas as
+    // permutações de bins equivalentes, e o custo é fatorial no número
+    // de itens de tamanho igual (as familias adversariais têm muitos).
+    // Só tentamos o PRIMEIRO bin de cada grupo de resíduo igual.
+    let mut ultima_residuo = f64::NEG_INFINITY;
+    let mut convergiu = true;
     for b in 0..residuos.len() {
-        if x <= residuos[b] + 1e-9 {
+        let res = residuos[b];
+        if (res - ultima_residuo).abs() <= 1e-12 {
+            continue;
+        }
+        ultima_residuo = res;
+        if x <= res + 1e-9 {
             residuos[b] -= x;
-            dfs(itens, restante, i + 1, residuos, melhor, start, budget_us);
+            if !dfs(itens, restante, i + 1, residuos, melhor, start, budget_us) {
+                convergiu = false;
+            }
             residuos[b] += x;
         }
     }
     // Abre um bin novo.
     residuos.push(1.0 - x);
-    dfs(itens, restante, i + 1, residuos, melhor, start, budget_us);
+    if !dfs(itens, restante, i + 1, residuos, melhor, start, budget_us) {
+        convergiu = false;
+    }
     residuos.pop();
+    convergiu
 }
 
 #[cfg(test)]
@@ -224,5 +261,42 @@ mod tests {
                 }
             }
         }
+    }
+
+    #[test]
+    fn orcamento_estourado_devolve_none_e_nunca_um_subotimo() {
+        // Regressão: `dfs` corta por TEMPO, e o corte era descartado.
+        // O incumbent do FFD voltava mascarado de ótimo, então
+        // `optimal_bins_budget` devolvia `Some(OPT+1)` em vez do `None`
+        // que o doc promete. Em 6 de 80 instâncias isso produzia valor
+        // errado; agora o estourado devolve `None` e nenhum `Some` é
+        // subótimo.
+        let mut n_some = 0usize;
+        let mut n_none = 0usize;
+        for &dist in Distribution::all().iter() {
+            for n in [12usize, 16, 20, 24] {
+                for rep in 0..20u64 {
+                    let items = generate(n, dist, rep * 101 + n as u64);
+                    match optimal_bins_budget(&items, 1) {
+                        // Orç��mento de 1 µs: quando devolve Some, tem de ser
+                        // o ótimo de verdade — nunca o incumbent.
+                        Some(v) => {
+                            n_some += 1;
+                            let exato = optimal_bins_budget(&items, 3_000_000_000)
+                                .expect("orçamento de 3 s deveria convergir");
+                            assert!(
+                                v <= exato,
+                                "devolveu Some({v}) acima do ótimo {exato} ({dist:?}, n={n})"
+                            );
+                        }
+                        None => n_none += 1,
+                    }
+                }
+            }
+        }
+        // O corte por tempo precisa realmente ter acontecido em parte das
+        // instâncias; se nunca devolvesse None, a regressão está inerte.
+        assert!(n_none > 0, "orçamento de 1 µs nunca estourou: teste inerte");
+        assert!(n_some > 0, "nenhum caso convergedo: teste inerte");
     }
 }

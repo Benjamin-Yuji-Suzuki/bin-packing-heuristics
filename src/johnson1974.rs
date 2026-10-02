@@ -90,7 +90,7 @@ pub fn pior_caso_com_reposicao(n: usize, eps: f64, m: usize) -> Vec<f64> {
 mod tests {
     use super::*;
     use crate::algorithms::{best_fit, best_fit_decreasing, first_fit, first_fit_decreasing, next_fit};
-    use crate::exact::optimal_bins;
+    use crate::exact::{optimal_bins, optimal_bins_budget};
 
     #[test]
     fn construcao_tem_o_tamanho_certo() {
@@ -116,14 +116,30 @@ mod tests {
     #[test]
     fn razao_acima_de_1_005() {
         let mut max_r = 0.0f64;
+        let mut resolvidos = 0usize;
+        let mut estouraram = 0usize;
         for &n in &[17usize, 34, 51, 68] {
             let (l, _) = pior_caso_ff(n, 1e-2);
-            let opt = optimal_bins(&l).expect("B&B nao resolveu");
+            // Orcamento explicito e generoso. O B&B e' exponencial nestas
+            // instancias -- `n = 34` e acima nao converge nem em 60 s. Antes
+            // o corte por tempo era descartado e devolvia o incumbent do FFD
+            // mascarado de otimo, entao o teste passava por valor errado.
+            // Agora o estourado devolve `None` e o teste o conta como tal.
+            let Some(opt) = optimal_bins_budget(&l, 60_000_000) else {
+                estouraram += 1;
+                continue;
+            };
+            resolvidos += 1;
             let r = first_fit(&l).bins as f64 / opt as f64;
             println!("  N={n:3} OPT={opt:3} FF={:3} razao={r:.4}", first_fit(&l).bins);
             assert!(r >= 1.0, "N={n}: razao abaixo de 1 seria bug");
             max_r = max_r.max(r);
         }
+        // A propriedade so pode ser afirmada onde o otimo foi PROVADO.
+        assert!(resolvidos > 0, "nenhuma instancia convergiu: teste inerte");
+        println!(
+            "  B&B: {resolvidos} resolvidos, {estouraram} estouraram o orcamento (60 s)"
+        );
         // Com a transcrição atual a razão supera 1 (o FF é pior que o ótimo).
         assert!(
             max_r > 1.005,
@@ -139,8 +155,12 @@ mod tests {
 
     #[test]
     fn todas_as_heuristicas_ficam_acima_do_otimo() {
-        let (l, _) = pior_caso_ff(34, 1e-4);
-        let opt = optimal_bins(&l).unwrap();
+        // n = 17 converge (OPT = 9, FF = 10); n >= 34 nao converge em 60 s,
+        // entao o oráculo exato nao esta disponivel la. O teste afirma o
+        // que consegue provar, no tamanho onde a prova fecha.
+        let (l, _) = pior_caso_ff(17, 1e-4);
+        let opt = optimal_bins_budget(&l, 60_000_000)
+            .expect("B&B nao resolveu em 60 s no n=17");
         for (nome, bins) in [
             ("NF", next_fit(&l).bins),
             ("FF", first_fit(&l).bins),
