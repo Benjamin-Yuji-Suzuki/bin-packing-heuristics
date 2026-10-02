@@ -181,3 +181,37 @@ não da ferramenta.
 **Filtro de aceitação:** só entram no texto os pontos com CV abaixo de 15%
 no tamanho comparado. Ruído em tempos de poucos microssegundos é esperado e
 não é contaminação — o critério se aplica ao tamanho que entra na tabela.
+
+
+---
+
+## ✅ Verificação de integridade dos dados (após processos antigos terminarem)
+
+Dois processos em background que eu tinha disparado antes terminaram tarde e
+avisaram. Um deles é o **re-benchmark contaminado**. Conferi por
+*timestamp* se eles teriam sobrescrito a coleta limpa:
+
+```
+dados_escala/runs/*.csv   todos escritos entre 03:11 e 03:19
+coleta limpa              iniciou depois, com rm -rf do diretório
+```
+
+Os arquivos são da coleta limpa — a contaminada escreve antes e foi apagada
+pelo `rm -rf` do processo seguinte.
+
+Confirmações na série atual:
+
+| Verificação | Resultado |
+|---|---|
+| Identidade de bins entre Rust/C/C++ | **420 chaves, 0 divergências** |
+| `rust/C` em n = 65.536 | 0,835 · 1,002 · 1,017 · 0,996 · 1,016 |
+| Pontos com CV > 15% | 57/420 — todos com tempo médio de **1,6 ms** |
+| Tempo médio dos pontos limpos | **80 ms** (50× maior) |
+| CV máximo em n = 65.536 com tempo > 1 ms | **12,4%** |
+
+O ruído relativo é inversamente proporcional à duração: onde o tempo é de
+microssegundos, o desvio percentual é grande pela natureza do relógio. Onde o
+tempo é de milissegundos — que é onde as razões entre linguagens são
+medidas — o CV cai para menos de 13%.
+
+**Conclusão: a série atual é íntegra e utilizável.**
