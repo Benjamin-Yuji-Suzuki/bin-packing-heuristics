@@ -75,7 +75,7 @@ par cpu6/cpu7:  0,7% + 95,7% = 96,4%   <- evitado
 cd "/home/ben/Área de trabalho/Onde deve rodar a IA/Analise-de-Algoritmos/Artigo/2026-09-BinPacking"
 
 cargo build --release            # ~7 s
-cargo test                       # 25 testes, ~2 s
+cargo test                       # 33 testes, ~2 s
 ```
 
 **Compilação fair-play** (necessária para o benchmark ser justo):

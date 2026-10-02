@@ -58,7 +58,7 @@ bash scripts/bnb.sh                # ~2 min; mesma política de pre-flight
 ```bash
 cargo run --release -- run -n 20 -d tres_particao      # instância única
 cargo run --release -- experiment                       # experimento completo (grava resultados.csv)
-cargo test                                             # 25 testes (unit + integração + propriedades + B&B + auditoria)
+cargo test                                             # 33 testes (unit + integração + propriedades + B&B + auditoria)
 
 # ---experimentos de pior caso, progresso e ordenação ---
 cargo run --release -- worstcase --sizes 12,24,36,48    # pior/melhor caso vs ÓTIMO EXATO (B&B)
@@ -149,13 +149,13 @@ Resultado (n=16.000, uniforme discreta, mediana de 3 execuções, máquina ocios
 
 | Algoritmo | Rust (µs) | C (µs)  | C++ (µs) | Python (µs) | rust/C |
 |-----------|-----------|---------|----------|-------------|--------|
-| NF        | 38        | 70      | 64       | 530         | 0.55×  |
+| NF        | 39        | 70      | 64       | 530         | 0.56×  |
 | FF        | 24.889    | 24.929  | 24.768   | 1.369.383   | 1.00×  |
 | BF        | 30.988    | 34.090  | 35.653   | 1.743.061   | 0.91×  |
 | FFD       | 27.148    | 27.987  | 27.298   | 1.483.583   | 0.97×  |
 | BFD       | 41.308    | 41.934  | 41.877   | 2.538.086   | 0.99×  |
 
-**Rust é 1,82× mais rápido que C em NF e 10% mais rápido em BF; empata
+**Rust é 1,79× mais rápido que C em NF e 10% mais rápido em BF; empata
 em FF, FFD e BFD** — com
 C/C++ em `-O3 -march=native` e Rust em `target-cpu=native` (fair play:
 mesma configuração de otimização máxima para todos). Python fica ~14×
@@ -220,7 +220,7 @@ variabilidade seria zero por construção.
 
 | Ferramenta | Finalidade | Resumo de uso | Revisão humana realizada |
 |---|---|---|---|
-| **Hermes Agent** (agente autônomo; modelos `longcat-2.0:free` e `space-bunny-alpha`) | Desenvolvimento e auditoria do projeto | **Implementação:** todo o código Rust (heurísticas NF/FF/BF/FFD/BFD, limitador L2, gerador, CLI, testes) **e o solver exato por branch-and-bound**, além das reimplementações em C, C++ e Python do benchmark e do próprio branch-and-bound. **Experimentos:** as 1.000 execuções do delineamento fatorial e o benchmark multi-linguagem. **Validação:** auditoria numérica de todos os números contra os CSVs brutos — encontrou 3 erros materiais nos valores publicados (2 múltiplos de velocidade cruzando séries distintas, 1 total de comparações sem correspondência) e 1 defeito no solver (poda que descartava ramos válidos). **Texto:** artigo, guia de estudo e matriz de referências. | O autor escolheu e validou o tema; descartou rodada contaminada e exigiu re-execução com máquina ociosa; corrigiu os números sinalizados pela auditoria conferindo cada um contra o dado bruto; revisou o texto; verificou testes de propriedade (incluindo contraexemplo FFD>FF); verificou todas as referências. |
+| **Hermes Agent** (agente autônomo; modelos `longcat-2.0:free` e `space-bunny-alpha`) | Desenvolvimento e auditoria do projeto | **Implementação:** todo o código Rust (heurísticas NF/FF/BF/FFD/BFD, limitador L2, gerador, CLI, testes) **e o solver exato por branch-and-bound**, além das reimplementações em C, C++ e Python do benchmark e do próprio branch-and-bound. **Experimentos:** as 1.000 execuções do delineamento fatorial e o benchmark multi-linguagem. **Validação:** auditoria numérica de todos os números contra os CSVs brutos — encontrou 5 erros materiais nos valores publicados (2 múltiplos de velocidade cruzando séries distintas, 1 total de comparações sem correspondência, e 2 múltiplos de tempo entre linguagens que não fechavam em série alguma) e 1 defeito no solver (poda que descartava ramos válidos). **Texto:** artigo, guia de estudo e matriz de referências. | O autor escolheu e validou o tema; descartou rodada contaminada e exigiu re-execução com máquina ociosa; corrigiu os números sinalizados pela auditoria conferindo cada um contra o dado bruto; revisou o texto; verificou testes de propriedade (incluindo contraexemplo FFD>FF); verificou todas as referências. |
 | **Claude Sonnet 4.6 (Thinking)** — Antigravity (Google DeepMind) | Revisão acadêmica do artigo parcial pré-entrega | Leu artigo-parcial.tex, referencias.bib e guia-de-estudo.md; avaliou clareza, coesão, metodologia, formato SBC, as referências bibliográficas e a declaração de IA; gerou relatório com pontuação por critério; aplicou correções aprovadas no .tex. | O autor selecionou e aprovou cada modificação individualmente antes da edição. Nenhum arquivo foi alterado sem autorização prévia explícita. |
 | **Gemini 3.1 Pro (High)** — Antigravity (Google) | Revisão de estilo e formalidade acadêmica | Analisou o texto atuando como editor sênior; removeu jargões metalinguísticos ("eixos", "matriz de referências") e elevou a coesão/tom do artigo. | O autor analisou o feedback crítico e autorizou a delegação das reescritas. |
 

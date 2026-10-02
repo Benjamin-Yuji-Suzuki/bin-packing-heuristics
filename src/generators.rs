@@ -10,7 +10,8 @@ pub enum Distribution {
     UniformDiscrete100,
     /// Itens apenas em (1/4, 1/2] — caso difícil (3-Partition).
     ThreePartition,
-    /// Falkenauer U{1/10, ..., 1/2} — média 0.275, caso "fácil" p/ FFD.
+    /// Falkenauer U{1/10, ..., 1/2} — média 0.300, caso "fácil" p/ FFD.
+    /// (medida em 160.000 amostras: 0.2995; a média teórica de U{10..50}/100 é 30/100)
     FalkenauerU120,
 }
 
@@ -52,7 +53,7 @@ pub fn generate(n: usize, dist: Distribution, seed: u64) -> Vec<f64> {
             .map(|_| rng.gen_range(26..=50) as f64 / 100.0)
             .collect(),
         Distribution::FalkenauerU120 => (0..n)
-            // U{1/10, ..., 1/2} — média 0.275
+            // U{1/10, ..., 1/2} — média 0.300 (não 0.275)
             .map(|_| rng.gen_range(10..=50) as f64 / 100.0)
             .collect(),
     }

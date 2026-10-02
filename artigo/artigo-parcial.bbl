@@ -6,16 +6,16 @@ Albers, S., Khan, A., and Ladewig, L. (2021).
 \newblock {\em Algorithmica}, 83(9):2833--2858.
 
 \bibitem[Ayyadevara et~al. 2025]{ayyadevara2025}
-Ayyadevara, V., Dabas, H., Khan, A., and Sreenivas, K. V.~N. (2025).
+Ayyadevara, N., Dabas, R., Khan, A., and Sreenivas, K. V.~N. (2025).
 \newblock Near-optimal algorithms for stochastic online bin packing.
-\newblock {\em ACM Transactions on Algorithms}, 21(4):1--39.
+\newblock {\em ACM Transactions on Algorithms}, 21(2):1--39.
 
-\bibitem[Balogh et~al. 2021]{balogh2021}
+\bibitem[Balogh et~al. 2020]{balogh2021}
 Balogh, J., B{\'e}k{\'e}si, J., D{\'o}sa, G., Epstein, L., and Levin, A.
-  (2021).
+  (2020).
 \newblock A new lower bound for classic online bin packing.
-\newblock In {\em Proceedings of the 32nd ACM-SIAM Symposium on Discrete
-  Algorithms (SODA)}, pages 1758--1777.
+\newblock In {\em Proc. of the 28th European Symposium on Algorithms (ESA)},
+  Lecture Notes in Computer Science, pages 18--28. Springer.
 
 \bibitem[Bentley et~al. 1983]{bentley1983}
 Bentley, J.~L., Johnson, D.~S., Leighton, F.~T., and McGeoch, C.~C. (1983).

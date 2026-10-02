@@ -211,14 +211,24 @@ pub fn lower_bound_l2(items: &[f64]) -> usize {
     if items.is_empty() {
         return 0;
     }
-    let mut best = items.iter().sum::<f64>().ceil() as usize; // L1
+    // L1 = ceil(soma), com a MESMA tolerancia 1e-9 usada nos filtros de
+    // alpha abaixo. Sem ela, k itens de 1/k somam em f64 um valor pouco
+    // acima de 1 (ex.: 20 x 0.05 = 1.00000000000000022204), o ceil dava 2,
+    // e o limitador ficava ACIMA do optimo -- invalidando o argumento de
+    // que as razoes A/L2 sao conservadoras. O empacotador aceita
+    // x <= resíduo + 1e-9, ou seja, fecha em 1 bin.
+    let mut best = (items.iter().sum::<f64>() - 1e-9).ceil().max(0.0) as usize; // L1
     for alpha in candidate_alphas(items) {
         let large = items.iter().filter(|&&s| s > 1.0 - alpha + 1e-9).count();
         let medium_sum: f64 = items
             .iter()
             .filter(|&&s| s >= alpha - 1e-9 && s <= 1.0 - alpha + 1e-9)
             .sum();
-        let medium = medium_sum.ceil() as usize;
+        // Mesma tolerancia do L1 acima: alpha e' um tamanho de item, entao
+        // alpha = 1/k faz os k itens caírem todos em "medium" e a soma
+        // deles volta a ser 1.0000000000000002 em f64. Sem a tolerancia o
+        // limitador sobe para 2 quando o otimo e' 1.
+        let medium = (medium_sum - 1e-9).ceil().max(0.0) as usize;
         let lb = large + medium;
         if lb > best {
             best = lb;

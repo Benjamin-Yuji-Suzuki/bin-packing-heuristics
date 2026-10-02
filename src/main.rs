@@ -196,7 +196,7 @@ fn main() {
                         Distribution::UniformContinuous => "U[0,1] contínua",
                         Distribution::UniformDiscrete100 => "U{1/100..1} discreta",
                         Distribution::ThreePartition => "itens em (1/4, 1/2] (caso difícil)",
-                        Distribution::FalkenauerU120 => "U{1/10..1/2} (Falkenauer, média 0.275)",
+                        Distribution::FalkenauerU120 => "U{1/10..1/2} (Falkenauer, média 0.300)",
                     }
                 );
             }
