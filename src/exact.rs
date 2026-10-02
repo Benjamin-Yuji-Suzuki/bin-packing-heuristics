@@ -244,6 +244,128 @@ mod tests {
         }
     }
 
+    /// O teste acima cobre só `n = 10` uniforme — foi exatamente por isso
+    /// que a REGRA DE SIMETRIA do `dfs` (dois bins com o mesmo resíduo são
+    /// intercambiáveis) passou sem validação: ela só opera nas famílias
+    /// adversariais, onde vários itens têm tamanho igual e os resíduos dos
+    /// bins ficam iguais com frequência. Nenhuma instância uniforme aleatória
+    /// chega perto de exercitar essa regra.
+    ///
+    /// Este teste roda o B&B contra a mesma busca exata sem poda NAS FAMÍLIAS
+    /// ADVERSARIAIS. Se a regra de simetria descartasse uma solução válida, o
+    /// B&B devolveria um valor MAIOR que o ótimo — que é exatamente o modo de
+    /// falha que a poda (3) teve quando foi "corrigida" errado.
+    #[test]
+    fn bnb_bate_com_busca_nas_familias_adversariais() {
+        fn exata(items: &[f64]) -> usize {
+            let mut melhor = crate::algorithms::first_fit_decreasing(items).bins;
+            let mut v = items.to_vec();
+            v.sort_by(|a, b| b.total_cmp(a));
+            let mut residuos: Vec<f64> = Vec::with_capacity(v.len());
+            fn rec(it: &[f64], i: usize, r: &mut Vec<f64>, m: &mut usize) {
+                if r.len() >= *m {
+                    return;
+                }
+                if i == it.len() {
+                    *m = r.len();
+                    return;
+                }
+                for b in 0..r.len() {
+                    if it[i] <= r[b] + 1e-9 {
+                        r[b] -= it[i];
+                        rec(it, i + 1, r, m);
+                        r[b] += it[i];
+                    }
+                }
+                r.push(1.0 - it[i]);
+                rec(it, i + 1, r, m);
+                r.pop();
+            }
+            rec(&v, 0, &mut residuos, &mut melhor);
+            melhor
+        }
+        use crate::adversarial::{all_adversarial, generate_adversarial};
+        let mut checados = 0usize;
+        for fam in all_adversarial() {
+            // n <= 14: o B&B é exponencial e a busca sem poda também. Acima
+            // disso o teste custaria minutos — a ponto de não rodar na suíte.
+            for n in [6usize, 8, 10, 12, 14] {
+                let items = generate_adversarial(fam, n);
+                let bnb = optimal_bins(&items).unwrap();
+                assert_eq!(
+                    bnb,
+                    exata(&items),
+                    "B&B divergiu da busca exata em {} n={n}: bnb={bnb}, exata={exata}",
+                    fam.name(),
+                    exata = exata(&items),
+                );
+                assert!(
+                    bnb <= crate::algorithms::first_fit_decreasing(&items).bins,
+                    "B&B acima do FFD em {} n={n} — a busca exata está com podas erradas",
+                    fam.name()
+                );
+                checados += 1;
+            }
+        }
+        // O teste precisa ter exercitado alguma coisa, senão está inerte.
+        assert!(checados >= 20, "só checou {checados} instâncias — teste inerte");
+    }
+
+    /// A regra de simetria do `dfs` agrupa bins por resíduo igual, o que só
+    /// tem efeito quando a instância tem itens de tamanho **exatamente**
+    /// repetido — aí vários bins ficam com o mesmo resíduo e a regra decide
+    /// quais são tentados. As famílias do artigo já têm 12–13 repetidos por
+    /// instância (medido), mas nenhum teste cobria o caso degenerado.
+    ///
+    /// Estes casos foram escolhidos porque têm poucos valores distintos e
+    /// muita repetição, que é o pior caso para a regra.
+    #[test]
+    fn bnb_cobre_instancia_com_itens_repetidos() {
+        fn exata(items: &[f64]) -> usize {
+            let mut melhor = crate::algorithms::first_fit_decreasing(items).bins;
+            let mut v = items.to_vec();
+            v.sort_by(|a, b| b.total_cmp(a));
+            let mut residuos: Vec<f64> = Vec::with_capacity(v.len());
+            fn rec(it: &[f64], i: usize, r: &mut Vec<f64>, m: &mut usize) {
+                if r.len() >= *m {
+                    return;
+                }
+                if i == it.len() {
+                    *m = r.len();
+                    return;
+                }
+                for b in 0..r.len() {
+                    if it[i] <= r[b] + 1e-9 {
+                        r[b] -= it[i];
+                        rec(it, i + 1, r, m);
+                        r[b] += it[i];
+                    }
+                }
+                r.push(1.0 - it[i]);
+                rec(it, i + 1, r, m);
+                r.pop();
+            }
+            rec(&v, 0, &mut residuos, &mut melhor);
+            melhor
+        }
+        let casos: Vec<Vec<f64>> = vec![
+            vec![0.5, 0.5, 0.25, 0.25, 0.5, 0.25],
+            vec![0.34, 0.34, 0.33, 0.33, 0.32, 0.32, 0.31, 0.31],
+            vec![0.3; 8],
+            vec![0.34, 0.33, 0.34, 0.33, 0.34, 0.33, 0.32, 0.32],
+            vec![0.26, 0.26, 0.5, 0.26, 0.5, 0.26, 0.5, 0.26],
+        ];
+        for caso in casos {
+            let bnb = optimal_bins(&caso).unwrap();
+            let ex = exata(&caso);
+            assert_eq!(
+                bnb,
+                ex,
+                "B&B divergiu em {caso:?}: bnb={bnb}, exata={ex}"
+            );
+        }
+    }
+
     /// Viabilidade: todo resíduo de bin tem de ficar em [0, 1]. Um resíduo
     /// negativo significaria capacidade estourada — solução inválida.
     #[test]

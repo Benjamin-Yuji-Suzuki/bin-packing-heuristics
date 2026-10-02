@@ -466,6 +466,33 @@ veja a tabela `tab:ia` (ultima pagina do artigo).
 - [ ] Sei que FFD/BFD sao as melhores em qualidade, NF e o mais rapido.
 - [ ] Sei o contraexemplo de 6 itens (ordenacao pode piorar).
 
+### Bonus: uma lição sobre o branch-and-bound (se perguntarem sobre o codigo)
+
+O B&B tem **duas** podas alem do corte por tempo:
+1. **Poda por incumbent** — descarta o ramo se ja abrimos tantos bins
+   quanto a melhor solucao encontrada.
+2. **Poda por carga** — se a carga que falta nao cabe na folga dos bins
+   abertos, e preciso abrir `ceil(carga_faltante / 1.0)` bins novos. Se isso
+   ja alcanca a incumbent, o ramo morre.
+
+Uma terceira otimizacao: **regra de simetria**. Dois bins com o mesmo residuo
+sao intercambiaveis — colocar o item no primeiro ou no segundo leva ao mesmo
+estado. Sem essa regra o DFS reexploraria as permutacoes.
+
+**O detalhe que pode aparecer:** essas regras sao **otimizacoes, nao
+condicoes de corretude**. Medido: desligando a regra de simetria (pular ate o
+primeiro de cada grupo de residuo em vez de pular os duplicados), os 12 casos
+das familias adversariais e 4 casos degenerados **continuam dando o mesmo
+numero**. Isso significa que a regra nao e' o que garante o resultado — o
+garante e a busca exata. A regra so economiza tempo.
+
+**E o B&B "mente"?** Nao, depois da correcao de hoje. Antes, quando o orcamento
+estourava, devolvia `Some(incumbent_do_FFD)` mascarado de otimo. Agora devolve
+`None`, como o doc promete. Se o comando imprimir *"B&B nao convergiu"*, isso e'
+o comportamento correto — ele esta dizendo "nao sei", em vez de chutar.
+
+---
+
 **Se quiser conferir o esperado:**
 - `cd "/home/ben/Área de trabalho/Onde deve rodar a IA/Analise-de-Algoritmos/Artigo/2026-09-BinPacking"`
 - `cargo test --release` → 30 testes, todos passando

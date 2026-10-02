@@ -90,7 +90,7 @@ pub fn pior_caso_com_reposicao(n: usize, eps: f64, m: usize) -> Vec<f64> {
 mod tests {
     use super::*;
     use crate::algorithms::{best_fit, best_fit_decreasing, first_fit, first_fit_decreasing, next_fit};
-    use crate::exact::{optimal_bins, optimal_bins_budget};
+    use crate::exact::optimal_bins_budget;
 
     #[test]
     fn construcao_tem_o_tamanho_certo() {
