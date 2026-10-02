@@ -50,3 +50,7 @@ dados_20x/
 # dados da escala grande (n ate 256.000)
 dados_escala/
 inst_escala/
+
+# sondas de diagnostico temporarias (nao fazem parte do crate)
+src/bin/probe_*.rs
+src/bin/verifica_*.rs
