@@ -207,6 +207,7 @@ Resultados medidos:
 | Teste | O que mede | Resultado |
 |---|---|---|
 | determinismo | mesma entrada → mesma saída | 5/5 comandos idênticos em 20× |
+| expoentes | curva de crescimento | β₁: NF 0,97 · FF 1,97 (teórico 1 e 2), n até 256.000 |
 | experimento | os **números** são estáveis? | CV ≤ 0,19%; 20 números reproduzem em 0,12% |
 | artigo | o **documento** é reproduzível? | 20 PDFs com texto idêntico |
 | identidades | as linguagens concordam? | 0 divergências em 1.000 comparações |

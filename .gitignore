@@ -46,3 +46,7 @@ bench/carga_da_medicao.txt
 
 # resultados da verificacao de robustez 20x
 dados_20x/
+
+# dados da escala grande (n ate 256.000)
+dados_escala/
+inst_escala/
