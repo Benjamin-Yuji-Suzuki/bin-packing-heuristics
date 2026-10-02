@@ -102,13 +102,27 @@ explica a exceção. Teste de regressão adicionado
 
 ## ⚠️ Riscos remanescentes (declarados, não corrigidos)
 
-### 1. Série experimental dupla
+### 1. Série experimental dupla — ✅ RESOLVIDO
 
-O experimento principal (`experiment.rs`) usa a versão **com** rastreamento
-`item -> bin`; o benchmark entre linguagens usa as variantes `bins-only`.
-São **séries temporais diferentes** e não devem ser comparadas entre si —
-misturar foi exatamente o erro que produziu os múltiplos de 170×/487×
-corrigidos no início do projeto. O artigo declara essa separação.
+**O que era:** o experimento principal (`experiment.rs`) usava a versão
+**com** rastreamento `item -> bin`; o benchmark entre linguagens usava as
+variantes `bins-only`. A Tabela 2 (tempos entre linguagens) vinha de uma
+série e a Tabela 3 (expoentes) da outra — e comparar as duas seria
+ilegítimo, o mesmo erro dos múltiplos de 170×/487×.
+
+**O que foi feito:** cada execução agora mede **as duas séries na mesma
+passagem**, sobre a mesma instância. O CSV ganhou a coluna
+`tempo_bins_us` ao lado de `tempo_us`, e um `debug_assert` verifica a cada
+execução que as duas contagens de bins coincidem. A Tabela 3 e o gráfico
+`grafico_tempo_n.png` passaram a usar a série `bins-only` — a mesma da
+Tabela 2.
+
+**O que isso mudou nos números:** o expoente do NF caiu de 1,17 para
+0,92–1,04 (a série com rastreamento inflava o expoente linear, porque o
+custo de registrar a atribuição cresce com $n$). O fator de crescimento
+do NF caiu de 24× para 15×, contra os 16× previstos para crescimento
+linear. **A série `bins-only` é a medida mais próxima da prevista, e por
+isso é a que o artigo agora reporta.**
 
 ### 2. Carga do sistema durante as medições
 

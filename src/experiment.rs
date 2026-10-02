@@ -17,8 +17,14 @@ pub struct RunResult {
     pub lower_bound: usize,
     /// razao de aproximacao em relacao ao lower bound (>= 1)
     pub ratio_vs_lb: f64,
-    /// tempo em microssegundos
+    /// tempo em microssegundos da versao COM rastreio item->bin
     pub time_us: u128,
+    /// tempo em microssegundos da versao BINS-ONLY — o mesmo trabalho que
+    /// as implementacoes em C/C++/Python fazem. Medir os dois lados na MESMA
+    /// execucao elimina a dupla-serie: os expoentes de tempo e os tempos
+    /// entre linguagens passam a sair do mesmo par de medicoes, em vez de
+    /// virem de series diferentes que nao se podem comparar.
+    pub time_bins_us: u128,
     /// soma dos tamanhos (para o bound L1)
     pub total_size: f64,
 }
@@ -88,6 +94,19 @@ pub fn run_experiment_salt(
                     let start = Instant::now();
                     let sol = run_algorithm(alg, &items);
                     let elapsed = start.elapsed().as_micros();
+                    // Mesma heurística, variante bins-only: mede exatamente o
+                    // trabalho que C/C++/Python fazem.
+                    let start_bins = Instant::now();
+                    let bins_only = run_algorithm_bins(alg, &items);
+                    let elapsed_bins = start_bins.elapsed().as_micros();
+                    debug_assert_eq!(
+                        sol.bins,
+                        bins_only,
+                        "{}: as duas series divergiram em {} n={}",
+                        alg,
+                        dist.name(),
+                        n
+                    );
                     results.push(RunResult {
                         algorithm: alg,
                         distribution: dist.name().to_string(),
@@ -97,6 +116,7 @@ pub fn run_experiment_salt(
                         lower_bound: lb,
                         ratio_vs_lb: sol.bins as f64 / lb.max(1) as f64,
                         time_us: elapsed,
+                        time_bins_us: elapsed_bins,
                         total_size: total,
                     });
                 }
@@ -109,11 +129,11 @@ pub fn run_experiment_salt(
 /// Grava os resultados em CSV (cabeçalho incluído).
 pub fn to_csv(results: &[RunResult]) -> String {
     let mut out = String::from(
-        "algoritmo,distribuicao,n,rep,bins,lower_bound,razao_vs_lb,tempo_us,soma_tamanhos\n",
+        "algoritmo,distribuicao,n,rep,bins,lower_bound,razao_vs_lb,tempo_us,tempo_bins_us,soma_tamanhos\n",
     );
     for r in results {
         out.push_str(&format!(
-            "{},{},{},{},{},{},{:.6},{},{}\n",
+            "{},{},{},{},{},{},{:.6},{},{},{}\n",
             r.algorithm,
             r.distribution,
             r.n,
@@ -122,6 +142,7 @@ pub fn to_csv(results: &[RunResult]) -> String {
             r.lower_bound,
             r.ratio_vs_lb,
             r.time_us,
+            r.time_bins_us,
             r.total_size
         ));
     }

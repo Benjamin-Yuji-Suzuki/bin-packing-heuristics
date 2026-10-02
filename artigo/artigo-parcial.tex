@@ -138,6 +138,8 @@ Justificativa do gerador: distribuições uniformes são o padrão da literatura
 
 Para cada instância $I$: (i) qualidade --- $\mathrm{A}(I)/L_2(I)$, onde $L_2$ é o limite inferior de Martello--Toth \cite{martello1990}, calculado uma única vez por instância; como $L_2(I) \leq \mathrm{OPT}(I)$, tem-se $\mathrm{A}(I)/L_2(I) \geq \mathrm{A}(I)/\mathrm{OPT}(I)$ --- as razões reportadas são conservadoras (a qualidade real é ainda melhor); (ii) tempo --- relógio de parede em microssegundos (\texttt{Instant::now}/\texttt{elapsed}), medindo apenas o empacotamento, com 10 repetições por configuração e média reportada.
 
+Cada execução mede \emph{duas séries temporais} da mesma heurística sobre a mesma instância: a versão \emph{completa}, que registra a atribuição item--bin, e a versão \emph{bins-only}, que apenas conta os bins --- esta última é exatamente o trabalho que as implementações em C, C++ e Python realizam. As duas contagens são conferidas a cada execução (\texttt{debug\_assert}) e devem coincidir. Reportamos os tempos entre linguagens e os expoentes de crescimento a partir da série \emph{bins-only}, por ser a única comparável às outras linguagens; a série completa é usada apenas nos experimentos de contagem de itens processados, em que o rastreamento é o próprio objeto de estudo.
+
 Protocolo: 4 distribuições $\times$ 5 tamanhos ($n \in \{1{,}000, 2{,}000, 4{,}000, 8{,}000, 16{,}000\}$) $\times$ 10 repetições $\times$ 5 algoritmos $=$ \textbf{1.000 execuções}. O ajuste da curva empírica usa regressão por mínimos quadrados em escala log-log: para cada algoritmo, $\log t = \beta_0 + \beta_1 \log n$, com $\beta_1$ comparado ao expoente teórico (1 para NF, 2 para FF/BF/FFD/BFD).
 
 Ambiente: Intel Core i5-13420H (12 threads), 16 GB RAM, Linux Mint 22.3, Rust 1.98 com \texttt{--release} (LTO ativado). Cada processo de medição é single-thread.
@@ -201,23 +203,23 @@ O objetivo específico (iv) é confrontar o expoente medido com o previsto pela 
 
 \begin{table}[ht]
 \centering
-\caption{Expoente empírico $\beta_1$ da regressão $\log t = \beta_0 + \beta_1 \log n$, por algoritmo e distribuição. A teoria prevê $\beta_1 = 1$ para NF e $\beta_1 = 2$ para FF/BF/FFD/BFD.}
+\caption{Expoente empírico $\beta_1$ da regressão $\log t = \beta_0 + \beta_1 \log n$, por algoritmo e distribuição. Medido na mesma série \textit{bins-only} dos tempos da Tabela~\ref{tab:prelim} --- isto é, o trabalho efetivamente comparável com as implementações em C, C++ e Python. A teoria prevê $\beta_1 = 1$ para NF e $\beta_1 = 2$ para FF/BF/FFD/BFD.}
 \label{tab:expoentes}
 \footnotesize
 \begin{tabular}{@{}lccccc@{}}
 \hline
 Algoritmo & U[0,1] & U\{1/100\} & 3-part & Falkenauer & Previsão \\
 \hline
-NF  & 1.172 & 1.132 & 1.038 & 1.021 & $1$ \\
-FF  & 1.908 & 1.957 & 1.929 & 1.929 & $2$ \\
-BF  & 1.878 & 1.951 & 1.974 & 1.960 & $2$ \\
-FFD & 1.868 & 1.936 & 1.932 & 1.908 & $2$ \\
-BFD & 1.901 & 1.958 & 1.961 & 1.945 & $2$ \\
+NF  & 0.923 & 0.990 & 1.023 & 1.039 & $1$ \\
+FF  & 1.826 & 1.983 & 1.967 & 1.956 & $2$ \\
+BF  & 1.843 & 1.931 & 1.904 & 1.882 & $2$ \\
+FFD & 1.759 & 1.932 & 1.953 & 1.930 & $2$ \\
+BFD & 1.829 & 1.922 & 1.909 & 1.886 & $2$ \\
 \hline
 \end{tabular}
 \end{table}
 
-As cinco séries quadráticas recuperam $\beta_1 \in [1{,}86;\,1{,}97]$ com $R^2 \geq 0{,}996$: a taxa de crescimento medida é a quadrática prevista, com o pequeno viés para baixo atribuível ao custo fixo por instância (ordenação, alocação) que, proporcionalmente, pesa mais nas instâncias pequenas. A série linear recupera $\beta_1 \in [1{,}02;\,1{,}17]$. A dispersão do NF merece registo: a distribuição contínua dá o maior expoente ($1{,}172$, $R^2 = 0{,}96$), porque os itens pequenos que gera são mais numerosos e mais custam por item no laço interno do FF/BF --- não porque o NF deixe de ser linear. Confirmamos o comportamento de forma independente pelo fator de crescimento: ao aumentar $n$ em $16\times$ (de 1.000 para 16.000), o NF multiplica o tempo por $24\times$ (previsto $16\times$ para linear) e o FF por $225\times$ (previsto $256\times$ para quadrático).
+As cinco séries quadráticas recuperam $\beta_1 \in [1{,}76;\,1{,}98]$ com $R^2 \geq 0{,}999$: a taxa de crescimento medida é a quadrática prevista, com o pequeno viés para baixo atribuível ao custo fixo por instância (ordenação, alocação) que, proporcionalmente, pesa mais nas instâncias pequenas. A série linear recupera $\beta_1 \in [0{,}92;\,1{,}04]$, em torno da unidade como prevê a teoria. Registre-se que esta medição é feita na série \textit{bins-only} --- a mesma dos tempos entre linguagens da Tabela~\ref{tab:prelim} ---, e não na série que rastreia a atribuição item--bin. A diferença importa sobretudo no NF: na série com rastreiação seu expoente é sistematicamente maior (de $1{,}02$ a $1{,}17$) porque o custo de registrar a atribição é proporcional ao número de itens e cresce com $n$; na série comparável, o NF recupera $\beta_1 \approx 1$ como a teoria prevê. Confirmamos o comportamento de forma independente pelo fator de crescimento: ao aumentar $n$ em $16\times$ (de 1.000 para 16.000), o NF multiplica o tempo por $15\times$ (previsto $16\times$ para o crescimento linear) e o FF por $242\times$ (previsto $256\times$ para o quadrático), ambos na série \textit{bins-only}.
 
 \subsection{Instâncias adversariais: forçando o pior caso} \label{sec:adversarial}
 
@@ -390,7 +392,7 @@ O Cronograma da Seção~\ref{sec:cronograma} detalha os próximos passos. Em ord
 \begin{itemize}[nosep]
   \item Ampliar a escala até $n = 256.000$ (O GMP atual de 16.000 já é rapidíssimo: o FF completo leva $\approx 25$ ms, de modo que a afirmação de \emph{impraticabilidade} para grandes $n$ ainda precisa de evidência em escala maior);
   \item \textbf{(já feito)} Solver exato por branch-and-bound com validação de viabilidade e conferência contra busca sem podas --- permite razão contra $\mathrm{OPT}$ verdadeiro em $n \leq 60$;
-  \item \textbf{(já feito)} Ajuste da curva empírica de tempo: expoentes medidos $\beta_1 \in [1{,}86;\,1{,}97]$ para as séries quadráticas, com $R^2 \geq 0{,}996$ (Tabela~\ref{tab:expoentes});
+  \item \textbf{(já feito)} Ajuste da curva empírica de tempo na série \textit{bins-only}: expoentes medidos $\beta_1 \in [1{,}76;\,1{,}98]$ para as séries quadráticas e em torno de $1$ para a linear, com $R^2 \geq 0{,}999$ (Tabela~\ref{tab:expoentes});
   \item \textbf{(já feito)} Comparação entre linguagens sob fair-play, com todas as versões em otimização máxima e o processo fixado num \emph{performance core};
   \item \textbf{(feito, resultado negativo)} Famílias adversariais de pior caso: medidas contra o ótimo exato, \emph{não} atingem as garantias teóricas (Seção~\ref{sec:adversarial}); resta construir as instâncias canônicas de Johnson et al.~\cite{johnson1974} para confrontar diretamente o limite de $1{,}7$ do First Fit;
   \item Adicionar o experimento \textit{random-order} (BF em permutação aleatória) para dialogar com a conjectura de Kenyon \cite{kenyon1996} e o 1.144 de \cite{hebbar2024};

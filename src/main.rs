@@ -352,6 +352,9 @@ fn main() {
                         lower_bound: lb,
                         ratio_vs_lb: bins as f64 / lb.max(1) as f64,
                         time_us: elapsed,
+                        // aqui ja medimos a variante bins-only, entao as duas
+                        // colunas de tempo recebem a mesma medicao
+                        time_bins_us: elapsed,
                         total_size,
                     });
                 }

@@ -28,7 +28,11 @@ def main(csv_path="resultados.csv"):
     agg_t = defaultdict(list)
     agg_r = defaultdict(list)
     for r in rows:
-        agg_t[(r["algoritmo"], r["distribuicao"], r["n"])].append(r["time_us"])
+        # serie bins-only: a mesma dos tempos entre linguagens (Tab 2) e
+        # dos expoentes (Tab 3). Medir a serie com rastreio aqui produziria
+        # uma figura inconsistente com as tabelas do artigo.
+        val = r.get("tempo_bins_us") or r["time_us"]
+        agg_t[(r["algoritmo"], r["distribuicao"], r["n"])].append(float(val))
         agg_r[(r["algoritmo"], r["distribuicao"], r["n"])].append(r["ratio"])
 
     # Gráfico 1: tempo × n (log-log)
