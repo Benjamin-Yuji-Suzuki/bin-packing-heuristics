@@ -125,10 +125,17 @@ fn dfs(
     //
     // REGRA DE SIMETRIA: dois bins com o MESMO resíduo são
     // intercambiáveis -- colocar o item no primeiro ou no segundo leva ao
-    // mesmo conjunto de estados. Sem esta regra o DFS reexplora todas as
-    // permutações de bins equivalentes, e o custo é fatorial no número
-    // de itens de tamanho igual (as familias adversariais têm muitos).
-    // Só tentamos o PRIMEIRO bin de cada grupo de resíduo igual.
+    // mesmo conjunto de estados. Sem esta regra o DFS reexploraria todas as
+    // permutações de bins equivalentes. Só tentamos o PRIMEIRO bin de cada
+    // grupo de resíduo igual.
+    //
+    // IMPORTANTE: isto é OTIMIZAÇÃO, NÃO CONDIÇÃO DE CORRETUDE. Medido:
+    // relaxando a regra (pular até o primeiro de cada grupo, em vez de pular
+    // só os duplicados), os 12 casos das famílias adversariais e 5 casos
+    // degenerados de itens repetidos continuam devolvendo o MESMO valor. Ou
+    // seja, a busca exata é o que garante o resultado; a regra só economiza
+    // tempo. Por isso nenhum teste de saída consegue prová-la — os testes
+    // verificam é que o B&B bate com a busca exata SEM nenhuma dessas regras.
     let mut ultima_residuo = f64::NEG_INFINITY;
     let mut convergiu = true;
     for b in 0..residuos.len() {
