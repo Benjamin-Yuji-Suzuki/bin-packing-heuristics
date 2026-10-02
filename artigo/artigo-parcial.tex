@@ -260,7 +260,7 @@ Para tornar explícito \emph{como} cada heurística progride --- e não apenas q
 \begin{figure}[ht]
 \centering
 \includegraphics[width=\textwidth]{grafico_progresso.png}
-\caption{Bins abertos em função dos itens já processados ($n = 200$), para as cinco heurísticas e as quatro distribuições. As curvas são monótonas não-decrescentes por construção. O NF cresce mais rápido e termina acima das demais, reflexo direto de sua razão de aproximação superior. As curvas do FFD e do BFD coincidem exatamente nestas distribuições: ambos produzem o mesmo \emph{número} de bins, diferindo apenas em \emph{qual} bin cada item ocupa --- por isso tracé-las com estilos distintos.}
+\caption{Bins abertos em função dos itens já processados ($n = 200$), para as cinco heurísticas e as quatro distribuições. As curvas são monótonas não-decrescentes por construção. O NF cresce mais rápido e termina acima das demais, reflexo direto de sua razão de aproximação superior. As curvas do FFD e do BFD coincidem quase exatamente nestas distribuições: em $199$ das $200$ configurações medidas eles produzem o mesmo \emph{número} de bins, diferindo apenas em \emph{qual} bin cada item ocupa; na única exceção (uniforme contínua, $n = 8.000$), o BFD abre um bin a menos que o FFD, ilustrando que a garantia idêntica $\frac{11}{9}\mathrm{OPT}+\frac{6}{9}$ não implica superioridade de uma variante sobre a outra em toda instância --- por isso tracé-las com estilos distintos.}
 \label{fig:progresso}
 \end{figure}
 

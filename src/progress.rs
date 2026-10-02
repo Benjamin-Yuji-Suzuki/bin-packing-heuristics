@@ -249,4 +249,26 @@ mod tests {
         }
         assert!(achados > 0, "a varredura não achou nenhum contraexemplo");
     }
+
+    /// ACHADO DA AUDITORIA DE VIES: em 199 das 200 configuracoes medidas
+    /// FFD e BFD abrem exatamente o mesmo numero de bins (diferem so em
+    /// qual bin cada item ocupa). Na unica excecao encontrada
+    /// (uniforme continua, n=8000) o BFD abre UM BIN A MENOS que o FFD.
+    ///
+    /// Isto importa porque a garantia dos dois e a mesma
+    /// (11/9·OPT + 6/9): garantia identica NAO implica que uma variante
+    /// seja pior em toda instancia. O artigo reportava "coincidem
+    /// exatamente"; o texto correto e' "coincidem em 199 de 200".
+    #[test]
+    fn bfd_pode_usar_um_bin_a_menos() {
+        use crate::generators::{generate, Distribution};
+        // semente do protocolo: 1000*(rep+1) + n, com rep=4 e n=8000
+        let items = generate(8000, Distribution::UniformContinuous, 1000 * 5 + 8000);
+        let ffd = crate::algorithms::first_fit_decreasing(&items).bins;
+        let bfd = crate::algorithms::best_fit_decreasing(&items).bins;
+        assert_eq!(ffd, 3978, "FFD nesta instancia abre 3978 bins");
+        assert_eq!(bfd, 3977, "BFD abre UM A MENOS — contra-intuitivo, mas real");
+        assert!(bfd < ffd, "a excecao nao deve desaparecer sozinha");
+    }
+
 }
