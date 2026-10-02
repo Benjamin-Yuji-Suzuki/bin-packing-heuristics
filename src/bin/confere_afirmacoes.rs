@@ -6,7 +6,6 @@
 use bpp::algorithms::*;
 use bpp::exact::optimal_bins;
 use bpp::generators::{generate, Distribution};
-use std::time::Instant;
 
 struct Check {
     id: &'static str,
@@ -40,7 +39,7 @@ fn main() {
 
     // ---------- 3. AFIRMACAO: 3-particao e' a mais dificil PARA AS 4 FIT-BASED ----------
     let hard = |alg: &str| -> bool {
-        let mut vals = DISTS.iter().map(|&d| razao_media(alg, d)).collect::<Vec<_>>();
+        let vals = DISTS.iter().map(|&d| razao_media(alg, d)).collect::<Vec<_>>();
         let mx = vals.iter().cloned().fold(0.0f64, f64::max);
         // a 3-particao esta entre as mais altas
         vals.iter().any(|v| (*v - mx).abs() < 1e-9)
@@ -96,7 +95,7 @@ fn main() {
                             _ => first_fit_decreasing(&it).bins,
                         };
                         if l2 > 0 && opt > 0 {
-                            soma += ((bins as f64 / l2 as f64) / (bins as f64 / opt as f64) - 1.0);
+                            soma += (bins as f64 / l2 as f64) / (bins as f64 / opt as f64) - 1.0;
                             k += 1;
                         }
                     }
@@ -105,7 +104,6 @@ fn main() {
         }
         sup_medio_por_dist.push((d.name().to_string(), 100.0 * soma / k.max(1) as f64));
     }
-    let sup = sup_medio_por_dist.iter().map(|x| x.1).fold(0.0f64, f64::max) / 100.0;
     add("L1", "L2 nunca supera o optimo exato", format!("{viol} violacoes em {cnt}"), viol == 0);
     let sup_txt: String = sup_medio_por_dist.iter().map(|(n, v)| format!("{n}={v:.2}%")).collect::<Vec<_>>().join(" ");
     add("L2", "A/L2 superestima A/OPT em media entre 0,3% e 4,9%", sup_txt,
@@ -141,18 +139,17 @@ fn main() {
         format!("{:.0}x", ff16 / ff1), (180.0..=280.0).contains(&(ff16 / ff1)));
 
     // ---------- 7. ESTABILIDADE (o que a secao 5.1 afirma) ----------
-    let it16 = generate(16000, Distribution::UniformDiscrete100, 16000);
-        // CV do NF no experimento completo (media das 10 repeticoes em n=16.000).
-    // A secao 5.1 cita 1,71% vindo de "melhor de 200 execucoes"; o
-    // experimento completo da 1,02% — o metodo e' outro, e o texto deve
-    // distinguir. Aqui medimos o do experimento.
+        // CV do NF lido do experimento completo (resultados.csv), em vez de
+    // medido agora. Motivo: o NF leva ~50 ns em n=16.000, abaixo da resolucao
+    // util do relogio — medir pontualmente da 0 ou 50 ns e o resultado
+    // oscila entre execucoes. O experimento completo tira a media de 10
+    // repeticoes, que e' estavel e e' o que o artigo reporta.
     let mut nfs: Vec<f64> = Vec::new();
-    for rep in 0..10 {
-        let it = generate(16000, Distribution::UniformDiscrete100,
-                          1000 * (rep as u64 + 1) + 16000);
-        let t = Instant::now();
-        next_fit_bins(&it);
-        nfs.push(t.elapsed().as_nanos() as f64);
+    for line in csv.lines().skip(1) {
+        let f: Vec<&str> = line.split(',').collect();
+        if f.len() >= 10 && f[0] == "NF" && f[1] == "uniforme_discreta_100" && f[2] == "16000" {
+            nfs.push(f[8].parse::<f64>().unwrap_or(0.0));
+        }
     }
     let m_nf = nfs.iter().sum::<f64>() / nfs.len() as f64;
     let var = nfs.iter().map(|x| (x - m_nf) * (x - m_nf)).sum::<f64>() / (nfs.len() - 1) as f64;

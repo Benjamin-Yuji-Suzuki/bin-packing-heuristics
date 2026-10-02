@@ -37,7 +37,7 @@ corrigidos para medir o que o artigo mede.
 | L2 | A/L2 superestima A/OPT | 30.000 amostras, `mede_l2` |
 | T1 | NF cresce ~15× de 1.000 a 16.000 | média do CSV: 3,4 ns → 50,6 ns = 14,9× |
 | T2 | FF cresce ~242× | 103 ns → 24.997 ns = 241,7× |
-| E4 | coeficientes de variação do NF | ver seção de ambiguidade abaixo |
+| E4 | coeficientes de variação do NF | lido do CSV (ver ambiguidade abaixo) |
 
 ---
 
