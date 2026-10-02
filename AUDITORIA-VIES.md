@@ -124,18 +124,44 @@ do NF caiu de 24× para 15×, contra os 16× previstos para crescimento
 linear. **A série `bins-only` é a medida mais próxima da prevista, e por
 isso é a que o artigo agora reporta.**
 
-### 2. Carga do sistema durante as medições
+### 2. Carga do sistema durante as medições — ✅ MEDIDO
 
-Os **tempos absolutos** variam até 75% com a carga da máquina (medido
-entre duas sessões). Os **ratios** entre linguagens permanecem estáveis
-dentro de ~1%. O artigo declara essa fronteira explicitamente.
+Afirmava-se que "os tempos absolutos variam até 75% com a carga". Essa
+causalidade **não estava provada** — o registro de carga usava um parser
+que quebrava a vírgula decimal do locale pt-BR (`1,75` virava `1` e `75`),
+então os valores de carga gravados eram lixo.
 
-### 3. NF é o algoritmo mais sensível
+**Medição direta** (`src/bin/mede_carga.rs`, 20 medições independentes,
+n = 16.000, série bins-only):
 
-O NF roda abaixo de 100 µs; o overhead de temporização pesa
-proporcionalmente mais. É o único com ratio que varia >1% entre
-medições (0,567 → 0,550 → 0,512). Não é viés, mas é o ponto mais frágil
-da tabela.
+| Heurística | média | desvio | CV | máx/mín |
+|---|---|---|---|---|
+| **NF** | 13 ns | 0 ns | **1,71%** | **1,08×** |
+| **FF** | 25.393 ms | 2.454 ms | **9,66%** | **1,33×** |
+
+**A hipótese original estava ERRADA.** Eu havia declarado que o NF era o
+algoritmo mais sensível por rodar abaixo de 100 µs. O medido é o
+oposto: o NF é o **mais estável** (roda em microssegundos — um
+preempção durante a medição é improvável, CV de 1,7%) e o FF é o **menos
+estável** (roda em dezenas de milissegundos e sofre preempção várias
+vezes, CV de 9,7%).
+
+**A consequência prática é mais séria do que se pensava.** O múltiplo
+FF/NF calculado nas 20 medições varyeu de **1.744.000× a 2.495.000×** —
+uma faixa de 1,4× entre o mínimo e o máximo. Ou seja, o "706×" publicado
+não é um número exato: é uma razão entre duas grandezas de duração, e o
+denominador (FF) é o termo instável. **A afirmação correta é que a razão
+é da ordem de centenas a milhares de vezes, medida sob condição específica
+de máquina ociosa — e não um valor puntual.**
+
+### 3. Ratios entre linguagens — ✅ ROBUSTO
+
+Os **ratios entre linguagens medindo a mesma heurística** permanecem
+estáveis dentro de ~1% (medido em três sessões independentes: 0,998 /
+0,998 / 1,005 no FF). Isso funciona porque o erro de preempção cai no
+numerador **e** no denominador, e se cancela. É por isso que a comparação
+multi-linguagem é confiável e o múltiplo entre algoritmos de durações
+diferentes não é.
 
 ---
 
