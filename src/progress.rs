@@ -53,7 +53,7 @@ pub fn trace_algorithm(name: &str, items: &[f64]) -> Vec<ProgressPoint> {
     let sol = crate::experiment::run_algorithm(name, items);
     let processed: Vec<f64> = if matches!(name, "FFD" | "BFD") {
         let mut s = items.to_vec();
-        s.sort_by(|a, b| b.partial_cmp(a).unwrap());
+        s.sort_by(|a, b| b.total_cmp(a));
         s
     } else {
         items.to_vec()
@@ -82,7 +82,7 @@ pub fn compare_sorted_unsorted(algorithm: &str, items: &[f64]) -> SortedVsUnsort
     use std::time::Instant;
 
     let mut sorted = items.to_vec();
-    sorted.sort_by(|a, b| b.partial_cmp(a).unwrap());
+    sorted.sort_by(|a, b| b.total_cmp(a));
 
     let t0 = Instant::now();
     let sol_u = run_algorithm(algorithm, items);
@@ -123,7 +123,7 @@ mod tests {
     fn trace_reporta_o_tamanho_certo_para_ordenadas() {
         let items = generate(40, Distribution::UniformDiscrete100, 7);
         let mut sorted = items.clone();
-        sorted.sort_by(|a, b| b.partial_cmp(a).unwrap());
+        sorted.sort_by(|a, b| b.total_cmp(a));
 
         for alg in ["NF", "FF", "BF"] {
             let pts = trace_algorithm(alg, &items);
@@ -219,7 +219,7 @@ mod tests {
         let items = vec![0.34, 0.39, 0.33, 0.28, 0.36, 0.27];
         let ff = crate::algorithms::first_fit(&items).bins;
         let mut s = items.clone();
-        s.sort_by(|a, b| b.partial_cmp(a).unwrap());
+        s.sort_by(|a, b| b.total_cmp(a));
         let ffd = crate::algorithms::first_fit(&s).bins;
         let opt = crate::exact::optimal_bins(&items).unwrap();
 

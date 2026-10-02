@@ -85,7 +85,7 @@ fn main() {
         // as quatro linguagens façam exatamente o mesmo trabalho, o Rust
         // também sempre busca.
         let mut itens = items.clone();
-        itens.sort_by(|a, b| b.partial_cmp(a).unwrap());
+        itens.sort_by(|a, b| b.total_cmp(a));
         let mut melhor = ffd_incumbent(&items);
         let mut restante = vec![0.0f64; n + 1];
         for i in (0..n).rev() {

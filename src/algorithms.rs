@@ -264,7 +264,7 @@ fn candidate_alphas(items: &[f64]) -> Vec<f64> {
             .filter(|&&s| s > 1e-9 && s < 0.5 - 1e-9)
             .copied(),
     );
-    cands.sort_unstable_by(|a, b| a.partial_cmp(b).unwrap());
+    cands.sort_unstable_by(|a, b| a.total_cmp(b));
     cands.dedup_by(|a, b| (*a - *b).abs() < 1e-9);
     cands
 }

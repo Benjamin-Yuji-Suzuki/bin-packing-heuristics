@@ -142,7 +142,7 @@ fn main() {
 
     let ref_itens = melhor_por_alg
         .values()
-        .max_by(|a, b| a.0.partial_cmp(&b.0).unwrap())
+        .max_by(|a, b| a.0.total_cmp(&b.0))
         .map(|(_, v, _)| v.clone())
         .unwrap_or_default();
     if ref_itens.is_empty() {

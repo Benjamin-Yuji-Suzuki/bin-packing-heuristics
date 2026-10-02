@@ -190,7 +190,7 @@ mod tests {
         fn exata(items: &[f64]) -> usize {
             let mut melhor = crate::algorithms::first_fit_decreasing(items).bins;
             let mut v = items.to_vec();
-            v.sort_by(|a, b| b.partial_cmp(a).unwrap());
+            v.sort_by(|a, b| b.total_cmp(a));
             let mut residuos: Vec<f64> = Vec::with_capacity(v.len());
             fn rec(it: &[f64], i: usize, r: &mut Vec<f64>, m: &mut usize) {
                 if r.len() >= *m {

@@ -61,7 +61,7 @@ fn main() {
     let cex = [0.34, 0.39, 0.33, 0.28, 0.36, 0.27];
     let ff = first_fit(&cex).bins;
     let mut srt = cex.to_vec();
-    srt.sort_by(|a, b| b.partial_cmp(a).unwrap());
+    srt.sort_by(|a, b| b.total_cmp(a));
     let ffd_c = first_fit(&srt).bins;
     let opt_c = optimal_bins(&cex).unwrap();
     add("C2", "contraexemplo: FF=2=OPT, FFD=3 (ordenar custa 1 bin)",
