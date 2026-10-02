@@ -31,6 +31,8 @@ FFD/BFD ≤ 11/9·OPT + 6/9 ≈ 1.222 (Dósa 2007).
 > fracos do artigo, do ponto de vista de quem vai avaliar.
 > **Auditoria de viés:** [`AUDITORIA-VIES.md`](AUDITORIA-VIES.md) — verificação de que
 > nenhum algoritmo, linguagem ou número recebe tratamento favorecido.
+> **Verificação de afirmações:** [`VERIFICACAO-AFIRMACOES.md`](VERIFICACAO-AFIRMACOES.md) —
+> cada afirmação quantitativa do artigo conferida contra código ou CSV.
 
 ```bash
 # 0. (opcional) conferir se a máquina está livre
