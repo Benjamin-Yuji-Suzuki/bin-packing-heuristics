@@ -42,8 +42,19 @@ pub fn next_fit(items: &[f64]) -> Solution {
         }
         sol.assignment.push(current);
     }
-    sol.residual.push(residual);
-    sol.bins = current + 1;
+    // O `push` final era incondicional, entao lista vazia deixava
+    // `residual.len() == 1` com `bins == 0` — o invariante
+    // `bins == residual.len()` (que as outras quatro heuristicas mantem)
+    // ficava quebrado. Agora o ultimo residuo so e' registrado se houve
+    // algum item. Antes disso, `next_fit([])` devolvia 1 bin contra 0 das
+    // demais; a assimetria era invisivel no artigo (n >= 1000) mas quebrava
+    // qualquer razao com n = 0.
+    if !items.is_empty() {
+        sol.residual.push(residual);
+        sol.bins = current + 1;
+    } else {
+        sol.bins = 0;
+    }
     sol
 }
 
@@ -104,14 +115,19 @@ pub fn best_fit(items: &[f64]) -> Solution {
 /// Garantia teórica: FFD(I) <= 11/9 OPT(I) + 6/9 (Dósa 2007).
 pub fn first_fit_decreasing(items: &[f64]) -> Solution {
     let mut sorted = items.to_vec();
-    sorted.sort_by(|a, b| b.partial_cmp(a).unwrap());
+    // `total_cmp`, e nao `partial_cmp().unwrap()`: com NaN o `partial_cmp`
+    // devolve None e o `unwrap()` ABORTA. As variantes bins-only abaixo já
+    // usavam `total_cmp` (algoritms.rs:192,198), então as duas séries
+    // temporais divergiam em comportamento -- a completa explodia num caso
+    // degenerado onde a bins-only rodava. Agora as duas são total.
+    sorted.sort_by(|a, b| b.total_cmp(a));
     first_fit(&sorted)
 }
 
 /// Best Fit Decreasing: ordena não-crescente + Best Fit.
 pub fn best_fit_decreasing(items: &[f64]) -> Solution {
     let mut sorted = items.to_vec();
-    sorted.sort_by(|a, b| b.partial_cmp(a).unwrap());
+    sorted.sort_by(|a, b| b.total_cmp(a));
     best_fit(&sorted)
 }
 

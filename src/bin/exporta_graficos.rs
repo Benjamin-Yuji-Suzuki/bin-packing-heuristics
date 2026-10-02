@@ -11,9 +11,14 @@ use bpp::progress::{compare_sorted_unsorted, trace_algorithm};
 const ALGS: [&str; 5] = ["NF", "FF", "BF", "FFD", "BFD"];
 
 fn main() {
+    // `--opt-exato` refaz os OTIMOS adversariais com orçamento longo (horas).
+    // Sem a flag, `pior_caso()` usa 120 s por ponto e PRESERVA o opt
+    // anterior quando o B&B não converge — que é o caso de
+    // pior_3particao com n >= 30 (medido: não converge nem em 10 min).
+    let exato = std::env::args().any(|a| a == "--opt-exato");
     progresso();
     ordenado();
-    pior_caso();
+    pior_caso(exato);
 }
 
 fn progresso() {
@@ -83,7 +88,10 @@ fn opt_previo(fam: &str, n: usize) -> Option<String> {
     None
 }
 
-fn pior_caso() {
+/// `exato = true`  => orçamento longo, resolve os pontos caros (LENTO).
+/// `exato = false` => 120 s por ponto; quando estoura, preserva o opt
+///                    anterior do CSV e avisa (comportamento de uso diário).
+fn pior_caso(exato: bool) {
     let mut w = String::from("familia,n,opt,nf,ff,bf,ffd,bfd\n");
     for fam in all_adversarial() {
         for &n in &[12usize, 20, 30, 40, 50] {
@@ -101,15 +109,17 @@ fn pior_caso() {
             //   2. avisa no stdout qual ponto ficou sem resolver.
             // O dado já publicado nunca é perdido nem substituído por
             //palpite.
-            let opt = match optimal_bins_budget(&items, 120_000_000) {
+            let orcamento: u128 = if exato { 3_600_000_000 } else { 120_000_000 };
+            let opt = match optimal_bins_budget(&items, orcamento) {
                 Some(o) => Some(o.to_string()),
                 None => {
                     let fam_nome = fam.name().to_string();
                     let preservado = opt_previo(&fam_nome, n);
                     if let Some(p) = &preservado {
                         eprintln!(
-                            "AVISO: B&B nao convergiu em 120 s para {fam_nome} n={n}; \
-                             mantido o opt anterior ({p}) do CSV."
+                            "AVISO: B&B nao convergiu em {orcamento} us para {fam_nome} n={n}; \
+                             mantido o opt anterior ({p}) do CSV. \
+                             Use --opt-exato para tentar de novo com 1 h por ponto."
                         );
                     } else {
                         eprintln!(

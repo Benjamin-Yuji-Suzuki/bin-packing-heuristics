@@ -320,10 +320,21 @@ orçamento estourado **removia a linha do CSV em silencio** -- o
 pontos a menos, sem erro e sem aviso. Os valores preservados (12, 15, 19)
 foram conferidos contra o B&B com orcamento longo: sao o otimo de verdade.
 
-Para regerar o opt exato desses tres pontos, e preciso rodar o B&B com
-orcamento de horas -- nao ha atalho para isso. O numero publicado
-esta correto e verificado; o que falta e so o caminho barato de
-reproduzi-lo.
+Para refazer o OPT desses tres pontos com orcamento longo (1 h por ponto):
+
+```bash
+cargo run --release --bin exporta_graficos -- --opt-exato
+```
+
+A flag troca o orcamento de 120 s para 1 h por ponto. Medido: mesmo 1 h
+NAO converge para os tres mais duros (pior_3particao n>=30) -- a busca e'
+exponencial e o gargalo e' intrinseco, nao a flag. Ela serve para os 17
+pontos que converge em 120 s e para documentar a tentativa nos outros tres,
+que seguem sendo preservados do CSV com aviso.
+
+O numero publicado (12, 15, 19) foi conferido contra o B&B com orcamento
+prolongado e e' o otimo de verdade; o que nao existe e' um atalho BARATO
+de recalcula-lo.
 
 # dados já medidos
 /usr/bin/python3 scripts/graficos.py            # tempo×n, razão×dist, 3-partição

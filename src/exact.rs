@@ -35,7 +35,9 @@ pub fn optimal_bins_budget(items: &[f64], budget_us: u128) -> Option<usize> {
 
     // Ordena decrescente: itens grandes primeiro dão podas mais fortes.
     let mut itens: Vec<f64> = items.to_vec();
-    itens.sort_by(|a, b| b.partial_cmp(a).unwrap());
+    // `total_cmp` (e nao `partial_cmp().unwrap()`): com NaN o
+    // `partial_cmp` devolve None e o `unwrap()` aborta o programa.
+    itens.sort_by(|a, b| b.total_cmp(a));
 
     // Somas de prefixo: `restante[i]` = soma de itens[i..].
     let n = itens.len();
