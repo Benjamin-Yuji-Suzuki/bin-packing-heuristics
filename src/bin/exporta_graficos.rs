@@ -4,7 +4,7 @@
 //! Uso: cargo run --release --bin exporta_graficos
 use bpp::adversarial::{all_adversarial, generate_adversarial};
 use bpp::algorithms::*;
-use bpp::exact::optimal_bins;
+use bpp::exact::optimal_bins_budget;
 use bpp::generators::{generate, Distribution};
 use bpp::progress::{compare_sorted_unsorted, trace_algorithm};
 
@@ -64,15 +64,64 @@ fn ordenado() {
     println!("dados_ordenado.csv");
 }
 
+/// Le o `opt` que JA esta em dados_piorcaso.csv para (fam, n).
+///
+/// Usado so quando o B&B estoura o orcamento: preserva o valor previamente
+/// resolvido em vez de perder o ponto. Nao e' fonte primaria -- o valor
+/// novo, quando o B&B converge, sempre tem precedencia.
+fn opt_previo(fam: &str, n: usize) -> Option<String> {
+    let txt = std::fs::read_to_string("dados_piorcaso.csv").ok()?;
+    for linha in txt.lines().skip(1) {
+        let c: Vec<&str> = linha.split(',').collect();
+        if c.len() >= 3 && c[0] == fam && c[1].parse::<usize>().ok() == Some(n) {
+            let v = c[2].trim();
+            if !v.is_empty() && !v.starts_with("l2:") {
+                return Some(v.to_string());
+            }
+        }
+    }
+    None
+}
+
 fn pior_caso() {
     let mut w = String::from("familia,n,opt,nf,ff,bf,ffd,bfd\n");
     for fam in all_adversarial() {
         for &n in &[12usize, 20, 30, 40, 50] {
             let items = generate_adversarial(fam, n);
-            let opt = match optimal_bins(&items) {
-                Some(o) => o,
-                None => continue,
+            // O B&B é exponencial nas famílias maiores: `pior_3particao`
+            // com n >= 30 NÃO converge nem em 10 minutos (medido), então
+            // este comando de uso diário não pode recalcular o OPT deles.
+            //
+            // Duas-saídas para não repetir o defeito anterior, em que o
+            // `None` era tratado com `continue` e a linha SUMIA do CSV em
+            // silêncio — a figura ficava com menos pontos sem ninguém
+            // perceber (20 linhas viravam 17). Agora, quando o orçamento
+            // estoura:
+            //   1. mantém o `opt` que já estava no CSV, se existir; e
+            //   2. avisa no stdout qual ponto ficou sem resolver.
+            // O dado já publicado nunca é perdido nem substituído por
+            //palpite.
+            let opt = match optimal_bins_budget(&items, 120_000_000) {
+                Some(o) => Some(o.to_string()),
+                None => {
+                    let fam_nome = fam.name().to_string();
+                    let preservado = opt_previo(&fam_nome, n);
+                    if let Some(p) = &preservado {
+                        eprintln!(
+                            "AVISO: B&B nao convergiu em 120 s para {fam_nome} n={n}; \
+                             mantido o opt anterior ({p}) do CSV."
+                        );
+                    } else {
+                        eprintln!(
+                            "AVISO: B&B nao convergiu em 120 s para {fam_nome} n={n}; \
+                             gravado l2:<{}> como cota inferior.",
+                            lower_bound_l2(&items)
+                        );
+                    }
+                    preservado.or_else(|| Some(format!("l2:{}", lower_bound_l2(&items))))
+                }
             };
+            let opt = opt.unwrap_or_default();
             let nf = next_fit(&items).bins;
             let ff = first_fit(&items).bins;
             let bf = best_fit(&items).bins;

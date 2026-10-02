@@ -300,6 +300,31 @@ O `python3` do PATH **não tem matplotlib** e falha.
 cargo run --release --bin exporta_graficos
 /usr/bin/python3 scripts/graficos_novos.py     # progresso, ordenado, pior caso
 
+### Atencao: `exporta_graficos` leva ~6 min30
+
+O branch-and-bound é exponencial nas familias adversariais maiores.
+`pior_3particao` com n >= 30 **nao converge nem em 10 minutos** (medido),
+entao o comando da 120 s por ponto e estoura nesses tres casos.
+
+Quando isso acontece ele **preserva o `opt` que ja estava no CSV** e
+imprime um AVISO no stdout:
+
+```
+AVISO: B&B nao convergiu em 120 s para pior_3particao n=30;
+       mantido o opt anterior (12) do CSV.
+```
+
+Isso e' deliberado. Uma versao anterior usava `continue`, e o `None` do
+orçamento estourado **removia a linha do CSV em silencio** -- o
+`dados_piorcaso.csv` caia de 20 para 17 linhas e a figura ficava com 3
+pontos a menos, sem erro e sem aviso. Os valores preservados (12, 15, 19)
+foram conferidos contra o B&B com orcamento longo: sao o otimo de verdade.
+
+Para regerar o opt exato desses tres pontos, e preciso rodar o B&B com
+orcamento de horas -- nao ha atalho para isso. O numero publicado
+esta correto e verificado; o que falta e so o caminho barato de
+reproduzi-lo.
+
 # dados já medidos
 /usr/bin/python3 scripts/graficos.py            # tempo×n, razão×dist, 3-partição
 
