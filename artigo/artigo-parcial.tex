@@ -33,12 +33,12 @@
 \maketitle
 
 \begin{abstract}
-The one-dimensional bin packing problem asks for the minimum number of unit-capacity bins needed to pack a list of items. It is NP-hard, and five classical heuristics --- Next Fit, First Fit, Best Fit and their decreasing variants --- remain the default choice in practice, backed by decades-old worst-case guarantees: ratio 2 for Next Fit, 1.7 for First/Best Fit, and the tight bound $11/9\,\mathrm{OPT}+6/9$ for First Fit Decreasing, whose additive constant was only settled in 2007. Theory, however, says little about how far these bounds are from typical behavior. We implement all five heuristics in Rust with zero external dependencies and run a controlled experiment (4 distributions, 5 instance sizes from 1{,}000 to 16{,}000 items, 10 repetitions each, 1{,}000 runs total), measuring both the approximation ratio against the Martello--Toth lower bound $L_2$ and wall-clock time. Results show the empirical ratios are far below the guarantees (e.g., FFD averages 1.001 on uniform instances against the 1.222 guarantee), that the 3-partition distribution is the hardest for the four fit-based heuristics (the Next Fit instead peaks on the continuous uniform), and that the $O(n^2)$ implementations of FF/BF grow quadratically in practice (fitted exponent $\beta_1 \approx 1.9$), so that the relative advantage of linear-time Next Fit --- about three orders of magnitude faster at $n = 16{,}000$, the exact factor depending on machine conditions --- widens as $n$ grows, even though the absolute cost of FF at this scale remains in the tens of milliseconds. We also construct adversarial instances that force the worst case, and document a minimal counterexample where sorting strictly hurts First Fit.
+The one-dimensional bin packing problem asks for the minimum number of unit-capacity bins needed to pack a list of items. It is NP-hard, and five classical heuristics --- Next Fit, First Fit, Best Fit and their decreasing variants --- remain the default choice in practice, backed by decades-old worst-case guarantees: ratio 2 for Next Fit, 1.7 for First/Best Fit, and the tight bound $11/9\,\mathrm{OPT}+6/9$ for First Fit Decreasing, whose additive constant was only settled in 2007. Theory, however, says little about how far these bounds are from typical behavior. We implement all five heuristics in Rust with zero external dependencies and run a controlled experiment (4 distributions, 5 instance sizes from 1{,}000 to 16{,}000 items, 10 repetitions each, 1{,}000 runs total), measuring both the approximation ratio against the Martello--Toth lower bound $L_2$ and wall-clock time. Results show the empirical ratios are far below the guarantees (e.g., FFD averages 1.001 on uniform instances against the 1.222 guarantee), that the 3-partition distribution is the hardest for the four fit-based heuristics (the Next Fit instead peaks on the continuous uniform), and that the $O(n^2)$ implementations of FF/BF grow quadratically in practice (fitted exponent $\beta_1 \approx 1.9$), so that the relative advantage of linear-time Next Fit --- about three orders of magnitude faster at $n = 16{,}000$, the exact factor depending on machine conditions --- widens as $n$ grows, even though the absolute cost of FF at this scale remains in the tens of milliseconds. We also construct adversarial instances, document a minimal counterexample where sorting strictly hurts First Fit, and repeat the experiment under random arrival order (the random-order model), finding that permuting the items does not change solution quality --- what governs the ratio is the size structure, not the sequence.
 \end{abstract}
 
 \begin{resumo}
 \begin{sloppypar}
-O problema do empacotamento unidimensional (bin packing) pede o número mínimo de recipientes de capacidade unitária necessários para alocar uma lista de itens. Ele é NP-difícil, e cinco heurísticas clássicas --- Next Fit, First Fit, Best Fit e suas variantes ordenadas --- continuam sendo a escolha padrão na prática, amparadas por garantias de pior caso com décadas: razão 2 para Next Fit, 1.7 para First/Best Fit e o limite exato $11/9\,\mathrm{OPT}+6/9$ para First Fit Decreasing, cuja constante aditiva só foi fechada em 2007. A teoria, porém, diz pouco sobre quão longe esses limites estão do comportamento típico. Implementamos as cinco heurísticas em Rust, sem dependências externas, e executamos um experimento controlado (4 distribuições, 5 tamanhos de instância de 1.000 a 16.000 itens, 10 repetições, 1.000 execuções no total), medindo tanto a razão de aproximação contra o limite inferior $L_2$ de Martello--Toth quanto o tempo de execução. Os resultados mostram que as razões empíricas ficam muito abaixo das garantias (ex.: FFD com média 1.001 em instâncias uniformes, contra a garantia de 1.222), que a distribuição de 3-partição é a mais difícil para as quatro heurísticas baseadas em encaixe (o Next Fit tem seu pior caso na uniforme contínua) e que as implementações $O(n^2)$ de FF/BF crescem de fato quadraticamente (expoente ajustado $\beta_1 \approx 1{,}9$), de modo que a vantagem relativa do Next Fit linear --- cerca de três ordens de grandeza em $n = 16{,}000$, com o fator exato dependendo das condições da máquina --- cresce com $n$, ainda que o custo absoluto do FF permaneça da ordem de dezenas de milissegundos nessa escala. Construímos ainda instâncias adversariais que forçam o pior caso e registramos um contraexemplo mínimo em que ordenar estritamente piora o First Fit.
+O problema do empacotamento unidimensional (bin packing) pede o número mínimo de recipientes de capacidade unitária necessários para alocar uma lista de itens. Ele é NP-difícil, e cinco heurísticas clássicas --- Next Fit, First Fit, Best Fit e suas variantes ordenadas --- continuam sendo a escolha padrão na prática, amparadas por garantias de pior caso com décadas: razão 2 para Next Fit, 1.7 para First/Best Fit e o limite exato $11/9\,\mathrm{OPT}+6/9$ para First Fit Decreasing, cuja constante aditiva só foi fechada em 2007. A teoria, porém, diz pouco sobre quão longe esses limites estão do comportamento típico. Implementamos as cinco heurísticas em Rust, sem dependências externas, e executamos um experimento controlado (4 distribuições, 5 tamanhos de instância de 1.000 a 16.000 itens, 10 repetições, 1.000 execuções no total), medindo tanto a razão de aproximação contra o limite inferior $L_2$ de Martello--Toth quanto o tempo de execução. Os resultados mostram que as razões empíricas ficam muito abaixo das garantias (ex.: FFD com média 1.001 em instâncias uniformes, contra a garantia de 1.222), que a distribuição de 3-partição é a mais difícil para as quatro heurísticas baseadas em encaixe (o Next Fit tem seu pior caso na uniforme contínua) e que as implementações $O(n^2)$ de FF/BF crescem de fato quadraticamente (expoente ajustado $\beta_1 \approx 1{,}9$), de modo que a vantagem relativa do Next Fit linear --- cerca de três ordens de grandeza em $n = 16{,}000$, com o fator exato dependendo das condições da máquina --- cresce com $n$, ainda que o custo absoluto do FF permaneça da ordem de dezenas de milissegundos nessa escala. Construímos ainda instâncias adversariais que forçam o pior caso, registramos um contraexemplo mínimo em que ordenar estritamente piora o First Fit e repetimos o experimento sob ordem de chegada aleatória (modelo \textit{random-order}), constatando que a permutação dos itens não altera a qualidade --- o que governa a razão de aproximação é a estrutura de tamanhos, e não a sequência de chegada.
 \end{sloppypar}
 \end{resumo}
 
@@ -255,6 +255,29 @@ O caso é específico desta instância: na média das distribuições, ordenar m
 \label{fig:ordenado}
 \end{figure}
 
+\subsection{Experimento random-order: diálogo com a literatura probabilística} \label{sec:random}
+
+Toda a análise anterior usa distribuições em que a ordem de chegada dos itens é fixa pelo próprio gerador. O modelo \textit{random-order} de Kenyon \cite{kenyon1996} estuda o Best Fit sob uma ordem de chegada que é uma permutação uniforme aleatória --- um cenário diferente, no qual as heurísticas online podem ser medidas sem o benefício da agrupagem por tamanho.
+
+Permutamos os itens de cada instância por semente Fisher--Yates distinta e comparamos a razão $A(I)/L_2(I)$ com e sem permutação ($n = 16.000$, $30$ repetições):
+
+\begin{center}
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+& \multicolumn{2}{c}{ordem original} & \multicolumn{2}{c}{ordem permutada} & \\ 
+\cmidrule(lr){2-3} \cmidrule(lr){4-5}
+Distribuição & NF & BF & NF & BF & $\Delta$BF \\
+\midrule
+$U[0,1]$ & $1{,}3298$ & $1{,}0115$ & $1{,}3290$ & $1{,}0111$ & $-0{,}0004$ \\
+$U\{1/100\}$ & $1{,}3238$ & $1{,}0094$ & $1{,}3232$ & $1{,}0092$ & $-0{,}0002$ \\
+3-partição & $1{,}2357$ & $1{,}1312$ & $1{,}2357$ & $1{,}1311$ & $-0{,}0001$ \\
+Falkenauer & $1{,}1968$ & $1{,}0308$ & $1{,}1958$ & $1{,}0309$ & $+0{,}0001$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Dois achados merecem registro. Primeiro, \emph{a permutação quase não altera o resultado} --- diferenças de ordem $10^{-4}$, muito abaixo do ruído. A razão não depende da ordem de chegada: o que governa a qualidade é a estrutura de tamanhos dos itens, não a sequência em que aparecem. Segundo, o Best Fit sob ordem aleatória fica entre $1{,}009$ e $1{,}131$, \emph{abaixo} da faixa de $1{,}08$ a $1{,}50$ que Kenyon \cite{kenyon1996} estima e abaixo da conjectura de $\approx 1{,}15$. Não reproduzimos a conjectura, e o resultado sugere que o piso de Kenyon descreve uma condição mais adversarial que a permutação uniforme sobre nossas distribuições --- possivelmente porque itens agrupados por tamanho, como nas instâncias de Falkenauer \cite{falkenauer1996}, já favorecem o encaixe guloso. Esse é um segundo resultado negativo, na mesma linha da Seção~\ref{sec:adversarial}, e o reportamos como tal.
+
 \subsection{Progresso: como a heurística avança item a item}
 
 Para tornar explícito \emph{como} cada heurística progride --- e não apenas quantos bins termina usando --- rastreamos a execução item a item, registrando quantos bins estão abertos após cada item. A Figura~\ref{fig:progresso} mostra essa curva para as cinco heurísticas nas quatro distribuições.
@@ -388,14 +411,14 @@ O presente estudo é parcial e tem limitações bem delimitadas:
 \begin{itemize}[nosep]
   \item A escala máxima é $n = 16.000$; a afirmação de vantagem relativa do algoritmo linear cresce com $n$ é medida até essa escala, e não além.
   \item O limitador $L_2$, embora validado como inferior ao ótimo, é estrito: a razão $A(I)/L_2(I)$ é uma estimativa conservadora da qualidade real, superestimando $A(I)/\mathrm{OPT}(I)$ em média entre $0{,}3\%$ e $4{,}9\%$ conforme a distribuição. O desvio máximo observado é bem maior --- até $50\%$ --- mas aparece apenas em instâncias muito pequenas ($n \leq 8$), onde o limitador tem pouquíssimos itens para somar; a superestimação tende a zero quando $n$ cresce, à medida que $L_2$ se aproxima de $\mathrm{OPT}$. Como o experimento principal usa $n \geq 1.000$, o efeito é irrelevante para os resultados relatados.
-  \item A análise de comportamento médio usa quatro distribuições de referência; outras distribuições --- em particular o modelo \textit{random-order} de Kenyon~\cite{kenyon1996} --- não foram cobertas neste conjunto parcial.
+  \item A análise de comportamento médio cobre quatro distribuições de referência, incluindo o modelo \textit{random-order} de Kenyon~\cite{kenyon1996}; outras famílias de distribuições não foram exploradas.
 \end{itemize}
 
 \subsection*{Trabalho futuro}
 
-O Cronograma da Seção~\ref{sec:cronograma} detalha os próximos passos. Em ordem de importância: (i) reproduzir a construção canônica do pior caso do FF a partir do texto original de Johnson et al.; (ii) estender a escala para $n$ na casa de centenas de milhares, para tornar a afirmação de vantagem relativa quantitativa; (iii) incorporar o experimento \textit{random-order}, que permitiria o diálogo direto com as conjecturas de Kenyon~\cite{kenyon1996} e Hebbar et al.~\cite{hebbar2024}; (iv) completar os experimentos definitivos.
+A Seção~\ref{sec:cronograma} lista os trabalhos futuros e as pendências. Em ordem de importância: (i) reproduzir a construção canônica do pior caso do FF a partir do texto original de Johnson et al.; (ii) estender a escala para $n$ na casa de centenas de milhares, para tornar a afirmação de vantagem relativa quantitativa; (iii) incorporar o experimento \textit{random-order}, que permitiria o diálogo direto com as conjecturas de Kenyon~\cite{kenyon1996} e Hebbar et al.~\cite{hebbar2024}; (iv) completar os experimentos definitivos.
 
-\section{Cronograma do 2º Bimestre} \label{sec:cronograma}
+\section{Trabalhos futuros e pendências} \label{sec:cronograma}
 
 \begin{itemize}[nosep]
   \item Ampliar a escala até $n = 256.000$ (O GMP atual de 16.000 já é rapidíssimo: o FF completo leva $\approx 25$ ms, de modo que a afirmação de \emph{impraticabilidade} para grandes $n$ ainda precisa de evidência em escala maior);
@@ -403,8 +426,8 @@ O Cronograma da Seção~\ref{sec:cronograma} detalha os próximos passos. Em ord
   \item \textbf{(já feito)} Ajuste da curva empírica de tempo na série \textit{bins-only}: expoentes medidos $\beta_1 \in [1{,}76;\,1{,}98]$ para as séries quadráticas e em torno de $1$ para a linear, com $R^2 \geq 0{,}999$ (Tabela~\ref{tab:expoentes});
   \item \textbf{(já feito)} Comparação entre linguagens sob fair-play, com todas as versões em otimização máxima e o processo fixado num \emph{performance core};
   \item \textbf{(feito, resultado negativo)} Famílias adversariais de pior caso: medidas contra o ótimo exato, \emph{não} atingem as garantias teóricas (Seção~\ref{sec:adversarial}); resta construir as instâncias canônicas de Johnson et al.~\cite{johnson1974} para confrontar diretamente o limite de $1{,}7$ do First Fit;
-  \item Adicionar o experimento \textit{random-order} (BF em permutação aleatória) para dialogar com a conjectura de Kenyon \cite{kenyon1996} e o 1.144 de \cite{hebbar2024};
-  \item Escrever as Seções de Resultados e Discussão e de Conclusão com os gráficos definitivos.
+  \item \textbf{(feito, resultado negativo)} Experimento \textit{random-order}: o Best Fit sob ordem de chegada aleatória fica entre $1{,}009$ e $1{,}131$, abaixo da faixa de Kenyon \cite{kenyon1996} e da conjectura de $1{,}15$. A permutação dos itens quase não altera a razão --- o que a governa é a estrutura de tamanhos, não a sequência de chegada (Seção~\ref{sec:random});
+  \item \textbf{(já feito)} Seções de Resultados e Discussão e de Conclusão, com os gráficos definitivos e a auditoria de afirmações.
 \end{itemize}
 
 \section{Declaração de uso de ferramentas de IA}
