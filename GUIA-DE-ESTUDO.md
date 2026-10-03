@@ -180,7 +180,7 @@ unico que e rapido.
 
 Tempo em microssegundos para empacotar **16.000 itens**:
 
-- NF (Rust): **39 us** — quase instantaneo.
+- NF (Rust): **39 us** (mediana medida 38,5) — quase instantaneo.
 - FF (Rust): **24.889 us** = 25 ms. **640 vezes mais lento** que o NF.
 - Python (BFD): **2.538.086 us** = 2,5 segundos. **65 vezes mais lento** que o
   Rust na mesma tarefa.
@@ -218,6 +218,11 @@ O artigo diz que o NF e **640x mais rapido que o FF** (e **1.059x** que o BFD).
    cancela.
    - Razao por series separadas: banda de ~5x (instavel).
    - Razao pareada: banda de **1,06x** (confiavel).
+
+**E o mesmo par em `n = 1.000`?** O NF ainda e' o mais rapido, mas a vantagem e
+menor: **197x** (contra 640x em `n = 16.000`). A razao cresce com `n` porque o
+NF e linear e os quadraticos sao quadraticos. O texto tambem menciona **1.059x**
+contra o BFD em `n = 16.000`.
 
 **Se perguntarem "por que 640x e nao 494x?"**, a resposta e: *"Porque medimos a
 razao dentro da mesma repeticao, e nao cruzando series — o NF e rapido demais
@@ -258,15 +263,29 @@ O artigo ajusta `log(tempo) = b0 + b1 * log(n)` e compara `b1` com a teoria:
 
 | Heuristica | b1 medido | Teoria | Significado |
 |---|---|---|---|
-| NF | 0,966-0,999 | 1 | linear, bate |
-| FF | 1,941-1,995 | 2 | quadratico, bate |
-| BF | 1,945-1,963 | 2 | quadratico, bate |
-| FFD | 1,920-1,962 | 2 | quadratico, bate |
-| BFD | 1,928-1,962 | 2 | quadratico, bate |
+| NF | 0,903-1,001 | 1 | linear, bate |
+| FF | 1,938-1,995 | 2 | quadratico, bate |
+| BF | 1,944-1,967 | 2 | quadratico, bate |
+| FFD | 1,925-1,972 | 2 | quadratico, bate |
+| BFD | 1,923-1,963 | 2 | quadratico, bate |
 
 **O que isso prova:** o comportamento empirico bate com a analise
 assintotica. O NF e de fato `O(n)`; os quadraticos sao de fato `O(n^2)`.
 Medidos em **nove tamanhos** de `n = 1.024` a `n = 256.000` (fator 250x).
+
+**O mesmo fato, medido de outro jeito.** Em vez de ajustar a curva, o
+artigo divide o tempo medido em `n = 1.000` pelo tempo em `n = 16.000`
+(um aumento de 16x no tamanho), usando o pareamento de repeticao:
+
+```
+NF:  18x   (previsto 16x para crescimento linear)
+FF: 230x   (previsto 256x para crescimento quadratico)
+```
+
+Se a razao medida fica perto do previsto, o modelo assintotico esta
+certo. E uma defesa util se perguntarem: o fator medido nao e o mesmo da
+razao 640x do abstract, porque sao perguntas diferentes -- aqui e' quanto o
+tempo cresce com `n`, la e' quanto uma heuristica custa mais que outra.
 
 **Detalhe importante:** o artigo diz que ampliar a faixa de escala foi
 "decisivo". Numa faixa estreita (1.000 a 16.000, so 16x), os desvios chegavam
@@ -359,7 +378,7 @@ e a mais fraca (2,0). Portanto o NF e a heuristica que mais "desaproveita" sua
 garantia em termos absolutos — mas como a garantia e fraca, ele ainda pode ser
 "ruim" (1,271) e ainda assim ser o mais rapido.
 
-## 11. Como argumentar se perguntarem (as 8 perguntas provaveis)
+## 11. Como argumentar se perguntarem (as 10 perguntas provaveis)
 
 **Q1. "Por que 640× e não 494×?"**
 Resposta: razao por pareamento de repeticao (mesma instancia, mesma execucao).
@@ -407,6 +426,18 @@ preempcao pesa mais em termos relativos.
 Resposta: as quatro linguagens produzem **bins identicos** em 100% das 4.000
 execucoes comparadas (3.000 comparacoes pareadas). A validacao cruzada
 confirma que so o tempo difere. Esta na §5.2.
+
+**Q9. "Qual e' o numero de testes do repositorio?"**
+Resposta: **36** (32 unitarios + 4 de integracao), todos passando em
+`cargo test --release`. Se a versao impressa do artigo falar em outro
+numero, o do repositorio e' o que vale.
+
+**Q10. "O NF cresce 15x ou 18x de 1.000 para 16.000?"**
+Resposta: **18x** (previsto 16x para crescimento linear), medido por
+pareamento de repeticao. O FF cresce **230x** contra os 256x previstos.
+Cuidado: esse e' um numero diferente do **640x** do abstract — aqui a
+pergunta e' "quanto o tempo cresce com n", la e' "quanto uma heuristica
+custa mais que outra".
 
 ---
 
