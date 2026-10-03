@@ -495,6 +495,6 @@ o comportamento correto — ele esta dizendo "nao sei", em vez de chutar.
 
 **Se quiser conferir o esperado:**
 - `cd "/home/ben/Área de trabalho/Onde deve rodar a IA/Analise-de-Algoritmos/Artigo/2026-09-BinPacking"`
-- `cargo test --release` → 30 testes, todos passando
+- `cargo test --release` → 36 testes, todos passando
 - `cargo run --release --bin confere_afirmacoes` → 15/15 afirmacoes confirmadas
 - PDF: `artigo/artigo-parcial.pdf` (22 paginas)

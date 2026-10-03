@@ -58,7 +58,7 @@ bash scripts/bnb.sh                # ~2 min; mesma política de pre-flight
 ```bash
 cargo run --release -- run -n 20 -d tres_particao      # instância única
 cargo run --release -- experiment                       # experimento completo (grava resultados.csv)
-cargo test                                             # 33 testes (unit + integração + propriedades + B&B + auditoria)
+cargo test                                             # 36 testes (unit + integração + propriedades + B&B + auditoria)
 
 # ---experimentos de pior caso, progresso e ordenação ---
 cargo run --release -- worstcase --sizes 12,24,36,48    # pior/melhor caso vs ÓTIMO EXATO (B&B)
