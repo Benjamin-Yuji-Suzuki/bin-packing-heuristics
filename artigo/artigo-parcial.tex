@@ -206,7 +206,7 @@ A Figura~\ref{fig:razao_dist} complementa a tabela: visualmente, a dominância d
 
 \subsection{Ajuste da curva empírica de tempo} \label{sec:expoentes}
 
-O objetivo específico (iv) é confrontar o expoente medido com o previsto pela análise assintótica. Ajustamos, por mínimos quadrados, $\log t = \beta_0 + \beta_1 \log n$ aos cinco tamanhos de instância. A Tabela~\ref{tab:expoentes} reporta o expoente $\beta_1$ e o coeficiente de determinação $R^2$ de cada ajuste.
+O objetivo específico (iv) é confrontar o expoente medido com o previsto pela análise assintótica. Ajustamos, por mínimos quadrados, $\log t = \beta_0 + \beta_1 \log n$ aos \emph{nove} tamanhos de instância, de $n = 1.024$ a $n = 256.000$. A Tabela~\ref{tab:expoentes} reporta o expoente $\beta_1$ e o coeficiente de determinação $R^2$ de cada ajuste.
 
 \begin{table}[ht]
 \centering
@@ -217,11 +217,11 @@ O objetivo específico (iv) é confrontar o expoente medido com o previsto pela 
 \hline
 Algoritmo & U[0,1] & U\{1/100\} & 3-part & Falkenauer & Previsão \\
 \hline
-NF  & 0.966 & 0.999 & 0.917 & 0.992 & $1$ \\
-FF  & 1.941 & 1.995 & 1.950 & 1.985 & $2$ \\
-BF  & 1.945 & 1.963 & 1.946 & 1.947 & $2$ \\
-FFD & 1.920 & 1.960 & 1.955 & 1.962 & $2$ \\
-BFD & 1.928 & 1.960 & 1.943 & 1.955 & $2$ \\
+NF  & 0.958 & 1.001 & 0.903 & 0.977 & $1$ \\
+FF  & 1.938 & 1.995 & 1.965 & 1.984 & $2$ \\
+BF  & 1.944 & 1.967 & 1.954 & 1.947 & $2$ \\
+FFD & 1.925 & 1.961 & 1.972 & 1.970 & $2$ \\
+BFD & 1.923 & 1.963 & 1.955 & 1.955 & $2$ \\
 \hline
 \end{tabular}
 \end{table}
@@ -230,7 +230,7 @@ Ampliar a faixa de escala foi decisivo para esta medição. Com \emph{nove} tama
 
 Ressalva metodológica sobre a coleta. A primeira série nesta escala foi comprometida: dois processos de medição foram executados em paralelo, ambos fixados no mesmo núcleo físico, o que produziu coeficientes de variação de até $165\%$ em pontos de tempo comparável. O sintoma é reconhecível --- valores bimodais na mesma condição, alternando entre um patamar e outro conforme o escalonamento do agendador. A série relatada aqui foi coletada sequencialmente, com verificação de que nenhum outro processo de medição estava ativo, e apresenta $17$ de $180$ pontos com dispersão acima de $15\%$ entre os tempos relevantes --- resíduo esperado em tempos da ordem de milissegundos.
 
-Registre-se também que esta medição é feita na série \textit{bins-only} --- a mesma dos tempos entre linguagens da Tabela~\ref{tab:prelim} ---, e não na série que rastreia a atribuição item--bin. A diferença importa sobretudo no NF: na série com rastreiação seu expoente é sistematicamente maior (de $0{,}97$ a $1{,}09$) porque o custo de registrar a atribuição é proporcional ao número de itens e cresce com $n$; na série comparável, o NF recupera $\beta_1 \approx 1$ como a teoria prevê. Confirmamos o comportamento de forma independente pelo fator de crescimento: ao aumentar $n$ em $16\times$ (de 1.000 para 16.000), o NF multiplica o tempo por $15\times$ (previsto $16\times$ para o crescimento linear) e o FF por $242\times$ (previsto $256\times$ para o quadrático), ambos na série \textit{bins-only}.
+Registre-se também que esta medição é feita na série \textit{bins-only} --- a mesma dos tempos entre linguagens da Tabela~\ref{tab:prelim} ---, e não na série que rastreia a atribuição item--bin. A diferença importa sobretudo no NF: na série com rastreiação seu expoente é sistematicamente maior (de $0{,}97$ a $1{,}09$) porque o custo de registrar a atribuição é proporcional ao número de itens e cresce com $n$; na série comparável, o NF recupera $\beta_1 \approx 1$ como a teoria prevê. Confirmamos o comportamento de forma independente pelo fator de crescimento: ao aumentar $n$ em $16\times$ (de 1.000 para 16.000), o NF multiplica o tempo por $18\times$ (previsto $16\times$ para o crescimento linear) e o FF por $230\times$ (previsto $256\times$ para o quadrático), ambos na série \textit{bins-only} e medidos pelo pareamento de repetição descrito na Seção~\ref{sec:pareamento}.
 
 \subsection{Instâncias adversariais: o que acontece quando tentamos forçar o pior caso} \label{sec:adversarial}
 

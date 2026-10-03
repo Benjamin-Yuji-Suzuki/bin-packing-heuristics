@@ -133,10 +133,15 @@ fn main() {
     let med = |alg: &str, n: usize| media_csv(alg, n);
     let nf1 = med("NF", 1000); let nf16 = med("NF", 16000);
     let ff1 = med("FF", 1000); let ff16 = med("FF", 16000);
-    add("T1", "NF multiplica o tempo por ~15x ao ir de 1.000 a 16.000 (previsto 16x)",
-        format!("{:.0}x", nf16 / nf1), (10.0..=20.0).contains(&(nf16 / nf1)));
-    add("T2", "FF multiplica o tempo por ~242x (previsto 256x)",
-        format!("{:.0}x", ff16 / ff1), (180.0..=280.0).contains(&(ff16 / ff1)));
+    // Faixas estreITAS de proposito. Antes eram 10..20 e 180..=280, que
+    // aceitavam qualquer coisa — foi assim que o texto pubicava "15x" e
+    // "242x" enquanto o dado dava 18x e 230x, e o verificador confirmava.
+    // Agora a faixa e' o valor medido com ~10% de tolerancia: um numero
+    // defasado no texto aciona a falha.
+    add("T1", "NF multiplica o tempo por ~18x ao ir de 1.000 a 16.000 (previsto 16x)",
+        format!("{:.0}x", nf16 / nf1), (16.0..=20.0).contains(&(nf16 / nf1)));
+    add("T2", "FF multiplica o tempo por ~230x (previsto 256x)",
+        format!("{:.0}x", ff16 / ff1), (207.0..=253.0).contains(&(ff16 / ff1)));
 
     // ---------- 7. ESTABILIDADE (o que a secao 5.1 afirma) ----------
         // CV do NF lido do experimento completo (resultados.csv), em vez de
@@ -154,8 +159,11 @@ fn main() {
     let m_nf = nfs.iter().sum::<f64>() / nfs.len() as f64;
     let var = nfs.iter().map(|x| (x - m_nf) * (x - m_nf)).sum::<f64>() / (nfs.len() - 1) as f64;
     let cv = 100.0 * var.sqrt() / m_nf;
-    add("E4", "CV do NF: media 1,0-6,5% (experimento) vs minimo ~1,7% (secao 5.1)",
-        format!("CV da media {cv:.2}%"), (0.5..=25.0).contains(&cv));
+    // O texto (§4.10) reporta CV da média do NF entre 1,0% e 8,8%.
+    // A faixa aqui e' o valor medido com folga; a de 0,5..=25,0 aceitava
+    // qualquer coisa e nunca acusaria um numero defasado no texto.
+    add("E4", "CV do NF: media entre 1,0% e 8,8% (§4.10), medido ~4,0%",
+        format!("CV da media {cv:.2}%"), (2.0..=8.0).contains(&cv));
 
     // ---------- IMPRIME ----------
     println!("{:<5}{:<9}{:>7}  {}", "ID", "VEREDITO", "", "AFIRMACAO");
